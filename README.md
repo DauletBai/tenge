@@ -1,34 +1,19 @@
-# Tenge Programming Language
+# Tenge Language Benchmarks
 
-**Tenge** — новый язык программирования, выросший из прототипа *tengri-lang*.  
-Он основан на идеях агглютинативности казахского языка и ориентирован на **финтех и вычислительные задачи**.
+Tenge is an experimental systems language focused on **performance, clarity, and fairness of comparison**.  
+Our mission is to explore compilation and runtime strategies that allow Tenge to reach or exceed C-level performance, while remaining simple and portable.
 
-## Mission
-- Создать язык, в котором архетипы и агглютинативность казахского языка отражаются в структуре кода.
-- Дать инструмент для высокопроизводительных приложений в **финансовом секторе**.
-- Соревноваться с C, Rust и Go на уровне низкоуровневых вычислений.
+This repository contains benchmark results against **C, Rust, and Go** on a set of classical workloads:
 
-## Benchmarks (средние результаты трёх прогонов)
+- **fib_iter / fib_rec** — micro-benchmarks for iteration/recursion overhead.
+- **sort** — 100k integer sort.
+- **var_mc** — Value-at-Risk Monte Carlo simulation (with Tenge-specific optimizations).
+- **nbody / nbody_sym** — gravitational N-body simulation (classical + symmetric kernels).
 
-| Task                | C        | Go       | Rust     | Tenge (best)     |
-|---------------------|----------|----------|----------|------------------|
-| Fib iter (90)       | ~41 ns   | ~5170 ns | ~197 ns  | ~50 ns           |
-| Fib rec (35)        | ~43 ms   | ~51 ms   | ~46 ms   | ~44 ms           |
-| Sort (100k)         | ~0.49 ms | ~0.11 ms | ~1.67 ms | ~0.82 ms (PDQ)   |
-| VaR Monte Carlo(1e6)| ~185 ms  | ~177 ms  | ~85 ms   | ~31 ms (Zig+QSel)|
+## Highlights
+- **Tenge ≈ C** on core workloads (`sort`, `nbody`, `nbody_sym`) within ~1–2%.
+- **Tenge leads** in VaR Monte Carlo with O(N) quickselect (~23.5 ms vs C/Go ~120 ms and Rust ~55 ms).
+- **Microbenchmarks:** `fib_iter(90)` shows Tenge in the tens of ns range, much faster than Go, slightly faster than C/Rust.
+- **Symmetric N-body:** Tenge ~31.7 ms, C ~32.2 ms, while Rust/Go are ~0.3 s.
 
-Tenge уже показал результаты уровня C на `fib_iter` и обогнал Rust/Go/C в Monte Carlo VaR благодаря Quickselect.
-
-## Roadmap
-- [x] Реализовать AOT-компиляцию
-- [x] Добавить benchmarks (fib, sort, Monte Carlo VaR)
-- [x] Улучшить sort (PDQ, radix)
-- [x] Добавить Ziggurat RNG и Quickselect для VaR
-- [ ] Добавить C/Rust/Go quickselect-версии (для честного сравнения)
-- [ ] Доработать radix sort (16-bit passes)
-- [ ] Расширить синтаксис языка (финтех-конструкции)
-- [ ] Выпустить whitepaper
-
----
-
-Исторический прототип: [tengri-lang](https://github.com/DauletBai/tengri-lang)
+See [RESULTS.md](RESULTS.md) for full tables and details.

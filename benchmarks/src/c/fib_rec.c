@@ -1,21 +1,17 @@
-#include "runtime.h"
+// FILE: benchmarks/src/c/fib_rec.c
+// Purpose: Recursive Fibonacci benchmark.
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-long long fib_rec(int n) {
-    if (n < 2) {
-        return n;
-    }
-    return fib_rec(n - 1) + fib_rec(n - 2);
+static inline long long now_ns(){
+  struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (long long)ts.tv_sec*1000000000LL + ts.tv_nsec;
 }
-
-int main(int argc, char** argv) {
-    int n = get_n(argc, argv, 35);
-
-    // The macro call is now simple and clean.
-    TIME_IT_NS(
-        (void)fib_rec(n);,
-        "fib_rec_c",
-        n
-    );
-
-    return 0;
+static long long fib(int n){ return (n<2)?n:(fib(n-1)+fib(n-2)); }
+int main(int argc, char** argv){
+  int n=(argc>1)?atoi(argv[1]):35;
+  long long t0=now_ns(); volatile long long r=fib(n); (void)r; long long t1=now_ns();
+  printf("TASK=fib_rec,N=%d,TIME_NS=%lld\n", n, (t1-t0));
+  return 0;
 }

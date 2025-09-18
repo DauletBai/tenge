@@ -5,11 +5,9 @@
 #include <time.h>
 static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
 static uint64_t xs=0x9E3779B97F4A7C15ULL;
-static inline void s(uint64_t v){ xs = v? v:0x9E3779B97F4A7C15ULL; }
 static inline uint64_t n64(){ uint64_t x=xs; x^=x>>12; x^=x<<25; x^=x>>27; xs=x; return x*0x2545F4914F6CDD1DULL; }
 static inline double u01(){ return (n64()>>11) * (1.0/9007199254740992.0); }
 static const double R=3.442619855899;
-static const double INV_R=1.0/3.442619855899;
 static const double X[129]={
   3.713086246740, 3.442619855899, 3.223084984578, 3.083228858216, 2.978696252647,
   2.894344007019, 2.823125350548, 2.761169372286, 2.706113573119, 2.656406411259,
@@ -42,6 +40,7 @@ static const double Y[129]={
   0.152233899679, 0.157321197585, 0.162879231358, 0.168877573620, 0.175257410941,
   0.181924907008, 0.188735170653, 0.195471201528, 0.201792000000, 0.0
 };
+
 static inline double ziggurat_norm(){
     for(;;){
         uint64_t u=n64();
@@ -50,7 +49,7 @@ static inline double ziggurat_norm(){
         double x = (double)(u>>12) * (1.0/4503599627370496.0) * X[i];
         if ((double)(u & 0xffffffffu)*(1.0/4294967296.0) < (Y[i+1]/Y[i])) return sign*x;
         if (i==0){
-            double r = -log( u01() ) * INV_R;
+            double r = -log( u01() ) / R;
             return sign*(R + r);
         } else {
             double y = Y[i+1] + (Y[i]-Y[i+1])*u01();
@@ -58,7 +57,7 @@ static inline double ziggurat_norm(){
         }
     }
 }
-// In-place Quickselect (k-th smallest)
+
 static double quickselect(double* a, int n, int k){
     int l=0, r=n-1;
     while(1){
@@ -80,7 +79,7 @@ int main(int argc,char**argv){
     const double S0=100.0, mu=0.05, sigma=0.20;
     double T=(double)steps/252.0, dt=T/(double)steps;
     double*loss=(double*)malloc(sizeof(double)*N);
-    s(123456789u);
+    xs=0x9E3779B97F4A7C15ULL;
     long long t0=now_ns();
     for(int i=0;i<N;i++){
         double S=S0;

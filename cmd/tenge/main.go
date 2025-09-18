@@ -1,15 +1,5 @@
 // FILE: cmd/tenge/main.go
-// Purpose: Minimal AOT demo driver that maps known demo .tng sources to emitted C.
-// Supported demos:
-//   - benchmarks/src/tenge/fib_iter_cli.tng
-//   - benchmarks/src/tenge/fib_rec_cli.tng
-//   - benchmarks/src/tenge/sort_cli_qs.tng
-//   - benchmarks/src/tenge/sort_cli_ms.tng
-//   - benchmarks/src/tenge/var_mc_sort_cli.tng
-//   - benchmarks/src/tenge/var_mc_zig_cli.tng
-//   - benchmarks/src/tenge/var_mc_qsel_cli.tng
-//   - benchmarks/src/tenge/sort_cli_pdq.tng
-//   - benchmarks/src/tenge/sort_cli_radix.tng
+// Purpose: AOT demo driver mapping .tng demo sources to emitted C.
 
 package main
 
@@ -40,9 +30,9 @@ func emitC(path string) (string, error) {
 		return cFibIter, nil
 	case "fib_rec_cli.tng":
 		return cFibRec, nil
-	case "sort_cli_qs.tng":
+	case "sort_cli_qsort.tng", "sort_cli_qs.tng":
 		return cSortQS, nil
-	case "sort_cli_ms.tng":
+	case "sort_cli_msort.tng", "sort_cli_ms.tng":
 		return cSortMS, nil
 	case "var_mc_sort_cli.tng":
 		return cVarMCSort, nil
@@ -54,6 +44,10 @@ func emitC(path string) (string, error) {
 		return cSortPDQ, nil
 	case "sort_cli_radix.tng":
 		return cSortRadix, nil
+	case "nbody_cli.tng":
+		return cNBody, nil
+	case "nbody_sym_cli.tng":
+		return cNBodySym, nil
 	default:
 		return "", errors.New("unsupported AOT demo source: " + path)
 	}
@@ -77,26 +71,18 @@ func main() {
 	fmt.Printf("C emitted: %s\n", out)
 }
 
-// --- C templates for demos ---
+// ---------------- C templates ----------------
 
-// fib_iter with microsecond batching: TIME_NS reports avg nanoseconds per run
+// fib_iter with microsecond batching: TIME_NS is avg ns per run
 const cFibIter = `#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/time.h>
-
-static inline long long now_us(){
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (long long)tv.tv_sec*1000000LL + (long long)tv.tv_usec;
-}
-
+static inline long long now_us(){ struct timeval tv; gettimeofday(&tv, NULL); return (long long)tv.tv_sec*1000000LL + (long long)tv.tv_usec; }
 int main(int argc,char**argv){
     int n    = (argc>1)?atoi(argv[1]):90;
-    int reps = (argc>2)?atoi(argv[2]):1000000; // default 1e6 internal repetitions
-
-    // simple iterative Fibonacci
-    volatile unsigned __int128 sink = 0; // prevent over-optimization
+    int reps = (argc>2)?atoi(argv[2]):1000000;
+    volatile unsigned __int128 sink = 0;
     long long t0 = now_us();
     for(int r=0; r<reps; r++){
         unsigned __int128 a=0,b=1;
@@ -104,14 +90,9 @@ int main(int argc,char**argv){
         sink += b;
     }
     long long t1 = now_us();
-
-    long long elapsed_us = (t1 - t0);
-    long long avg_ns = (elapsed_us * 1000LL) / (reps>0?reps:1);
-
-    // keep the same output contract: TIME_NS is per-run average
+    long long avg_ns = ((t1 - t0) * 1000LL) / (reps>0?reps:1);
     printf("TASK=fib_iter,N=%d,TIME_NS=%lld\n", n, avg_ns);
-    (void)sink;
-    return 0;
+    (void)sink; return 0;
 }
 `
 
@@ -140,7 +121,6 @@ static void msort(int* a,int n,int* tmp){ if(n<=1) return; int m=n/2; msort(a,m,
 int main(int argc,char**argv){int n=(argc>1)?atoi(argv[1]):100000; int*arr=(int*)malloc(sizeof(int)*n); int*tmp=(int*)malloc(sizeof(int)*n); for(int i=0;i<n;i++){arr[i]=n-i;} long long t0=now_ns(); msort(arr,n,tmp); long long t1=now_ns(); printf("TASK=sort_msort,N=%d,TIME_NS=%lld\n",n,(t1-t0)); free(arr); free(tmp); return 0;}
 `
 
-// --- Monte Carlo VaR (full sort, Box–Muller) ---
 const cVarMCSort = `#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -183,20 +163,28 @@ int main(int argc,char**argv){
 }
 `
 
-// --- Monte Carlo VaR (Ziggurat + full sort) ---
+// fixed cVarMCZig (no duplicated n64/u01)
 const cVarMCZig = `#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
 #include <time.h>
-static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
-static uint64_t xs=0x9E3779B97F4A7C15ULL;
-static inline void s(uint64_t v){ xs = v? v:0x9E3779B97F4A7C15ULL; }
-static inline uint64_t n64(){ uint64_t x=xs; x^=x>>12; x^=x<<25; x^=x>>27; xs=x; return x*0x2545F4914F6CDD1DULL; }
-static inline double u01(){ return (n64()>>11) * (1.0/9007199254740992.0); }
-static const double R=3.442619855899;
-static const double INV_R=1.0/3.442619855899;
-static const double X[129]={
+
+static inline long long now_ns(){
+    struct timespec ts; clock_gettime(CLOCK_MONOTONIC,&ts);
+    return (long long)ts.tv_sec*1000000000LL + ts.tv_nsec;
+}
+
+static uint64_t xs = 0x9E3779B97F4A7C15ULL;
+static inline uint64_t n64(){
+    uint64_t x=xs; x^=x>>12; x^=x<<25; x^=x>>27; xs=x; return x*0x2545F4914F6CDD1DULL;
+}
+static inline double u01(){
+    return (double)(n64()>>11) * (1.0/9007199254740992.0);
+}
+
+static const double R = 3.442619855899;
+static const double X[129] = {
   3.713086246740, 3.442619855899, 3.223084984578, 3.083228858216, 2.978696252647,
   2.894344007019, 2.823125350548, 2.761169372286, 2.706113573119, 2.656406411259,
   2.610972248428, 2.569033625924, 2.530010240221, 2.493457369855, 2.459018177410,
@@ -212,7 +200,7 @@ static const double X[129]={
   1.167516788538, 1.106842816421, 1.037314720727, 0.955242247089, 0.854753190635,
   0.724597525270, 0.546082246193, 0.298741512247, 0.000000000000, 0.0
 };
-static const double Y[129]={
+static const double Y[129] = {
   0.000000000000, 0.002669629083, 0.005548995220, 0.008616049314, 0.011848249446,
   0.015224797764, 0.018726306024, 0.022334586345, 0.026032444293, 0.029803507224,
   0.033632081515, 0.037502980167, 0.041401422775, 0.045312939729, 0.049223288290,
@@ -228,6 +216,7 @@ static const double Y[129]={
   0.152233899679, 0.157321197585, 0.162879231358, 0.168877573620, 0.175257410941,
   0.181924907008, 0.188735170653, 0.195471201528, 0.201792000000, 0.0
 };
+
 static inline double ziggurat_norm(){
     for(;;){
         uint64_t u=n64();
@@ -236,7 +225,7 @@ static inline double ziggurat_norm(){
         double x = (double)(u>>12) * (1.0/4503599627370496.0) * X[i];
         if ((double)(u & 0xffffffffu)*(1.0/4294967296.0) < (Y[i+1]/Y[i])) return sign*x;
         if (i==0){
-            double r = -log( u01() ) * INV_R;
+            double r = -log( u01() ) / R;
             return sign*(R + r);
         } else {
             double y = Y[i+1] + (Y[i]-Y[i+1])*u01();
@@ -244,15 +233,22 @@ static inline double ziggurat_norm(){
         }
     }
 }
-static int cmpd(const void*a,const void*b){double da=*(const double*)a, db=*(const double*)b; return (da>db)-(da<db);}
+
+static int cmpd(const void*a,const void*b){
+    double da=*(const double*)a, db=*(const double*)b;
+    return (da>db)-(da<db);
+}
+
 int main(int argc,char**argv){
     int N = (argc>1)?atoi(argv[1]):1000000;
     int steps = (argc>2)?atoi(argv[2]):1;
     double alpha = (argc>3)?atof(argv[3]):0.99;
     const double S0=100.0, mu=0.05, sigma=0.20;
     double T=(double)steps/252.0, dt=T/(double)steps;
+
     double*loss=(double*)malloc(sizeof(double)*N);
-    s(123456789u);
+    xs=0x9E3779B97F4A7C15ULL;
+
     long long t0=now_ns();
     for(int i=0;i<N;i++){
         double S=S0;
@@ -269,13 +265,13 @@ int main(int argc,char**argv){
     if(idx<0) idx=0; if(idx>=N) idx=N-1;
     double var=loss[idx];
     long long t1=now_ns();
+
     printf("TASK=var_mc_zig,N=%d,TIME_NS=%lld,VAR=%.6f\n",N,(t1-t0),var);
     free(loss);
     return 0;
 }
 `
 
-// --- Monte Carlo VaR (Ziggurat + Quickselect O(N)) ---
 const cVarMCQSel = `#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -283,11 +279,9 @@ const cVarMCQSel = `#include <stdio.h>
 #include <time.h>
 static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
 static uint64_t xs=0x9E3779B97F4A7C15ULL;
-static inline void s(uint64_t v){ xs = v? v:0x9E3779B97F4A7C15ULL; }
 static inline uint64_t n64(){ uint64_t x=xs; x^=x>>12; x^=x<<25; x^=x>>27; xs=x; return x*0x2545F4914F6CDD1DULL; }
 static inline double u01(){ return (n64()>>11) * (1.0/9007199254740992.0); }
 static const double R=3.442619855899;
-static const double INV_R=1.0/3.442619855899;
 static const double X[129]={
   3.713086246740, 3.442619855899, 3.223084984578, 3.083228858216, 2.978696252647,
   2.894344007019, 2.823125350548, 2.761169372286, 2.706113573119, 2.656406411259,
@@ -320,6 +314,7 @@ static const double Y[129]={
   0.152233899679, 0.157321197585, 0.162879231358, 0.168877573620, 0.175257410941,
   0.181924907008, 0.188735170653, 0.195471201528, 0.201792000000, 0.0
 };
+
 static inline double ziggurat_norm(){
     for(;;){
         uint64_t u=n64();
@@ -328,7 +323,7 @@ static inline double ziggurat_norm(){
         double x = (double)(u>>12) * (1.0/4503599627370496.0) * X[i];
         if ((double)(u & 0xffffffffu)*(1.0/4294967296.0) < (Y[i+1]/Y[i])) return sign*x;
         if (i==0){
-            double r = -log( u01() ) * INV_R;
+            double r = -log( u01() ) / R;
             return sign*(R + r);
         } else {
             double y = Y[i+1] + (Y[i]-Y[i+1])*u01();
@@ -336,7 +331,7 @@ static inline double ziggurat_norm(){
         }
     }
 }
-// In-place Quickselect (k-th smallest)
+
 static double quickselect(double* a, int n, int k){
     int l=0, r=n-1;
     while(1){
@@ -358,7 +353,7 @@ int main(int argc,char**argv){
     const double S0=100.0, mu=0.05, sigma=0.20;
     double T=(double)steps/252.0, dt=T/(double)steps;
     double*loss=(double*)malloc(sizeof(double)*N);
-    s(123456789u);
+    xs=0x9E3779B97F4A7C15ULL;
     long long t0=now_ns();
     for(int i=0;i<N;i++){
         double S=S0;
@@ -380,7 +375,6 @@ int main(int argc,char**argv){
 }
 `
 
-// --- SORT: PDQ-like introsort with insertion cutoff (no libc conflicts) ---
 const cSortPDQ = `#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -427,7 +421,6 @@ int main(int argc,char**argv){
 }
 `
 
-// --- SORT: 32-bit unsigned LSD radix (4 passes) ---
 const cSortRadix = `#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -457,5 +450,277 @@ int main(int argc,char**argv){
     printf("TASK=sort_radix,N=%d,TIME_NS=%lld\n",n,(t1-t0));
     free(arr); free(tmp);
     return 0;
+}
+`
+
+// Original N-body (non-symmetric)
+const cNBody = `#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+
+typedef struct { double x,y,z; } vec3;
+
+static inline long long now_ns(){
+  struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (long long)ts.tv_sec*1000000000LL + ts.tv_nsec;
+}
+
+static inline void vadd(vec3* a, vec3 b){ a->x+=b.x; a->y+=b.y; a->z+=b.z; }
+static inline vec3 vsub(vec3 a, vec3 b){ vec3 r={a.x-b.x,a.y-b.y,a.z-b.z}; return r; }
+static inline vec3 smul(vec3 a, double s){ vec3 r={a.x*s,a.y*s,a.z*s}; return r; }
+static inline double dot(vec3 a, vec3 b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
+
+static unsigned long long xs = 0x9E3779B97F4A7C15ULL;
+static inline unsigned long long n64(){
+  unsigned long long x=xs; x^=x>>12; x^=x<<25; x^=x>>27; xs=x; return x*0x2545F4914F6CDD1DULL;
+}
+static inline double u01(){
+  return (double)(n64()>>11) * (1.0/9007199254740992.0);
+}
+
+int main(int argc, char** argv){
+  int N    = (argc>1)?atoi(argv[1]):4096;
+  int step = (argc>2)?atoi(argv[2]):10;
+  double dt= (argc>3)?atof(argv[3]):1e-3;
+
+  vec3* pos = (vec3*)malloc(sizeof(vec3)*N);
+  vec3* vel = (vec3*)malloc(sizeof(vec3)*N);
+  vec3* acc = (vec3*)malloc(sizeof(vec3)*N);
+  double* m = (double*)malloc(sizeof(double)*N);
+
+  xs = 123456789ULL;
+  for(int i=0;i<N;i++){
+    pos[i].x = u01(); pos[i].y = u01(); pos[i].z = u01();
+    vel[i].x = (u01()-0.5)*1e-3; vel[i].y = (u01()-0.5)*1e-3; vel[i].z = (u01()-0.5)*1e-3;
+    acc[i].x = acc[i].y = acc[i].z = 0.0;
+    m[i] = 1.0;
+  }
+
+  const double G = 1.0;
+  const double eps2 = 1e-9;
+
+  for(int i=0;i<N;i++){
+    vec3 ai={0,0,0};
+    for(int j=0;j<N;j++){
+      if(i==j) continue;
+      vec3 rij = vsub(pos[j], pos[i]);
+      double r2 = dot(rij,rij) + eps2;
+      double inv = 1.0/sqrt(r2*r2*r2);
+      double s = G*m[j]*inv;
+      vadd(&ai, smul(rij,s));
+    }
+    acc[i]=ai;
+  }
+
+  long long t0 = now_ns();
+  for(int s=0; s<step; s++){
+    for(int i=0;i<N;i++){
+      vec3 dx = smul(vel[i],dt);
+      vec3 aa = smul(acc[i], 0.5*dt*dt);
+      vadd(&pos[i], dx); vadd(&pos[i], aa);
+    }
+    for(int i=0;i<N;i++){
+      vec3 ai={0,0,0};
+      for(int j=0;j<N;j++){
+        if(i==j) continue;
+        vec3 rij = vsub(pos[j], pos[i]);
+        double r2 = dot(rij,rij) + eps2;
+        double inv = 1.0/sqrt(r2*r2*r2);
+        double sF = G*m[j]*inv;
+        vadd(&ai, smul(rij,sF));
+      }
+      vec3 half = smul(acc[i], 0.5*dt);
+      vadd(&half, smul(ai, 0.5*dt));
+      vadd(&vel[i], half);
+      acc[i]=ai;
+    }
+  }
+  long long t1 = now_ns();
+
+  double KE=0, PE=0;
+  for(int i=0;i<N;i++){
+    KE += 0.5*m[i]*dot(vel[i],vel[i]);
+  }
+  for(int i=0;i<N;i++){
+    for(int j=i+1;j<N;j++){
+      vec3 rij=vsub(pos[j],pos[i]);
+      double r = sqrt(dot(rij,rij)+eps2);
+      PE += -G*m[i]*m[j]/r;
+    }
+  }
+  double E = KE+PE;
+
+  printf("TASK=nbody,N=%d,TIME_NS=%lld,ENERGY=%.9f\n", N, (t1-t0), E);
+
+  free(pos); free(vel); free(acc); free(m);
+  return 0;
+}
+`
+
+// Symmetric N-body (i<j)
+const cNBodySym = `#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <alloca.h>
+#include <stdint.h>
+
+static inline long long now_ns(void){
+  struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (long long)ts.tv_sec*1000000000LL + ts.tv_nsec;
+}
+static void* alloc_aligned(size_t align, size_t bytes){
+  void* p=NULL; if(posix_memalign(&p, align, bytes)!=0) return NULL; return p;
+}
+static uint64_t xs=0x9E3779B97F4A7C15ULL;
+static inline uint64_t n64(void){ uint64_t x=xs; x^=x>>12; x^=x<<25; x^=x>>27; xs=x; return x*0x2545F4914F6CDD1DULL; }
+static inline double u01(void){ return (double)(n64()>>11) * (1.0/9007199254740992.0); }
+
+int main(int argc,char**argv){
+  const int N     = (argc>1)?atoi(argv[1]):4096;
+  const int STEPS = (argc>2)?atoi(argv[2]):10;
+  const double dt = (argc>3)?atof(argv[3]):1e-3;
+
+  double *px=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *py=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *pz=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *vx=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *vy=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *vz=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *ax=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *ay=(double*)alloc_aligned(64,sizeof(double)*N);
+  double *az=(double*)alloc_aligned(64,sizeof(double)*N);
+
+  if(!px||!py||!pz||!vx||!vy||!vz||!ax||!ay||!az){
+    fprintf(stderr,"nbody_sym(AOT): allocation failed\n");
+    printf("TASK=nbody_sym,N=%d,TIME_NS=0,ENERGY=0.0\n", N);
+    return 1;
+  }
+
+  xs=123456789ULL;
+  for(int i=0;i<N;i++){
+    px[i]=u01(); py[i]=u01(); pz[i]=u01();
+    vx[i]=(u01()-0.5)*1e-3; vy[i]=(u01()-0.5)*1e-3; vz[i]=(u01()-0.5)*1e-3;
+    ax[i]=ay[i]=az[i]=0.0;
+  }
+
+  const double G=1.0, eps2=1e-9; const int TILE=64;
+
+  for(int i=0;i<N;i++){ ax[i]=ay[i]=az[i]=0.0; }
+  for(int i0=0;i0<N;i0+=TILE){
+    const int i1=(i0+TILE<N)?(i0+TILE):N;
+    for(int i=i0;i<i1;i++){
+      for(int j=i+1;j<i1;j++){
+        const double rx=px[j]-px[i], ry=py[j]-py[i], rz=pz[j]-pz[i];
+        const double r2=rx*rx+ry*ry+rz*rz+eps2;
+        const double inv=1.0/sqrt(r2*r2*r2);
+        const double s=G*inv;
+        const double fx=rx*s, fy=ry*s, fz=rz*s;
+        ax[i]+=fx; ay[i]+=fy; az[i]+=fz;
+        ax[j]-=fx; ay[j]-=fy; az[j]-=fz;
+      }
+    }
+    for(int j0=i1;j0<N;j0+=TILE){
+      const int j1=(j0+TILE<N)?(j0+TILE):N;
+      const int Ti=i1-i0, Tj=j1-j0;
+      double *taxi=(double*)alloca(sizeof(double)*Ti);
+      double *tayi=(double*)alloca(sizeof(double)*Ti);
+      double *tazi=(double*)alloca(sizeof(double)*Ti);
+      double *taxj=(double*)alloca(sizeof(double)*Tj);
+      double *tayj=(double*)alloca(sizeof(double)*Tj);
+      double *tazj=(double*)alloca(sizeof(double)*Tj);
+      for(int t=0;t<Ti;t++){ taxi[t]=tayi[t]=tazi[t]=0.0; }
+      for(int t=0;t<Tj;t++){ taxj[t]=tayj[t]=tazj[t]=0.0; }
+
+      for(int ii=0; ii<Ti; ii++){
+        const int i=i0+ii; const double pix=px[i], piy=py[i], piz=pz[i];
+        for(int jj=0; jj<Tj; jj++){
+          const int j=j0+jj;
+          const double rx=px[j]-pix, ry=py[j]-piy, rz=pz[j]-piz;
+          const double r2=rx*rx+ry*ry+rz*rz + eps2;
+          const double inv=1.0/sqrt(r2*r2*r2);
+          const double s=G*inv;
+          const double fx=rx*s, fy=ry*s, fz=rz*s;
+          taxi[ii]+=fx; tayi[ii]+=fy; tazi[ii]+=fz;
+          taxj[jj]-=fx; tayj[jj]-=fy; tazj[jj]-=fz;
+        }
+      }
+      for(int ii=0; ii<Ti; ii++){ ax[i0+ii]+=taxi[ii]; ay[i0+ii]+=tayi[ii]; az[i0+ii]+=tazi[ii]; }
+      for(int jj=0; jj<Tj; jj++){ ax[j0+jj]+=taxj[jj]; ay[j0+jj]+=tayj[jj]; az[j0+jj]+=tazj[jj]; }
+    }
+  }
+
+  long long t0=now_ns();
+
+  for(int s=0;s<STEPS;s++){
+    for(int i=0;i<N;i++){
+      px[i]+=vx[i]*dt + 0.5*ax[i]*dt*dt;
+      py[i]+=vy[i]*dt + 0.5*ay[i]*dt*dt;
+      pz[i]+=vz[i]*dt + 0.5*az[i]*dt*dt;
+    }
+    for(int i=0;i<N;i++){ ax[i]=ay[i]=az[i]=0.0; }
+
+    for(int i0=0;i0<N;i0+=TILE){
+      const int i1=(i0+TILE<N)?(i0+TILE):N;
+      for(int i=i0;i<i1;i++){
+        for(int j=i+1;j<i1;j++){
+          const double rx=px[j]-px[i], ry=py[j]-py[i], rz=pz[j]-pz[i];
+          const double r2=rx*rx+ry*ry+rz*rz+eps2;
+          const double inv=1.0/sqrt(r2*r2*r2);
+          const double s=G*inv;
+          const double fx=rx*s, fy=ry*s, fz=rz*s;
+          ax[i]+=fx; ay[i]+=fy; az[i]+=fz;
+          ax[j]-=fx; ay[j]-=fy; az[j]-=fz;
+        }
+      }
+      for(int j0=i1;j0<N;j0+=TILE){
+        const int j1=(j0+TILE<N)?(j0+TILE):N;
+        const int Ti=i1-i0, Tj=j1-j0;
+        double *taxi=(double*)alloca(sizeof(double)*Ti);
+        double *tayi=(double*)alloca(sizeof(double)*Ti);
+        double *tazi=(double*)alloca(sizeof(double)*Ti);
+        double *taxj=(double*)alloca(sizeof(double)*Tj);
+        double *tayj=(double*)alloca(sizeof(double)*Tj);
+        double *tazj=(double*)alloca(sizeof(double)*Tj);
+        for(int t=0;t<Ti;t++){ taxi[t]=tayi[t]=tazi[t]=0.0; }
+        for(int t=0;t<Tj;t++){ taxj[t]=tayj[t]=tazj[t]=0.0; }
+
+        for(int ii=0; ii<Ti; ii++){
+          const int i=i0+ii; const double pix=px[i], piy=py[i], piz=pz[i];
+          for(int jj=0; jj<Tj; jj++){
+            const int j=j0+jj;
+            const double rx=px[j]-pix, ry=py[j]-piy, rz=pz[j]-piz;
+            const double r2=rx*rx+ry*ry+rz*rz + eps2;
+            const double inv=1.0/sqrt(r2*r2*r2);
+            const double s=G*inv;
+            const double fx=rx*s, fy=ry*s, fz=rz*s;
+            taxi[ii]+=fx; tayi[ii]+=fy; tazi[ii]+=fz;
+            taxj[jj]-=fx; tayj[jj]-=fy; tazj[jj]-=fz;
+          }
+        }
+        for(int ii=0; ii<Ti; ii++){ ax[i0+ii]+=taxi[ii]; ay[i0+ii]+=tayi[ii]; az[i0+ii]+=tazi[ii]; }
+        for(int jj=0; jj<Tj; jj++){ ax[j0+jj]+=taxj[jj]; ay[j0+jj]+=tayj[jj]; az[j0+jj]+=tazj[jj]; }
+      }
+    }
+    for(int i=0;i<N;i++){ vx[i]+=ax[i]*dt; vy[i]+=ay[i]*dt; vz[i]+=az[i]*dt; }
+  }
+
+  long long t1=now_ns();
+
+  double KE=0.0, PE=0.0;
+  for(int i=0;i<N;i++){ KE+=0.5*(vx[i]*vx[i]+vy[i]*vy[i]+vz[i]*vz[i]); }
+  for(int i=0;i<N;i++){
+    for(int j=i+1;j<N;j++){
+      const double rx=px[j]-px[i], ry=py[j]-py[i], rz=pz[j]-pz[i];
+      const double r = sqrt(rx*rx+ry*ry+rz*rz + 1e-9);
+      PE += -1.0/r;
+    }
+  }
+  const double E=KE+PE;
+  printf("TASK=nbody_sym,N=%d,TIME_NS=%lld,ENERGY=%.9f\n", N, (t1-t0), E);
+
+  free(px); free(py); free(pz); free(vx); free(vy); free(vz); free(ax); free(ay); free(az);
+  return 0;
 }
 `

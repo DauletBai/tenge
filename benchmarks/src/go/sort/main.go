@@ -1,37 +1,35 @@
-// FILE: benchmarks/src/go/sort/main.go
 package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"sort"
 	"strconv"
 	"time"
 )
 
+func nowNs() int64 {
+	return time.Now().UnixNano()
+}
+
 func main() {
-	n := 100000
+	N := 100000
 	if len(os.Args) > 1 {
 		if v, err := strconv.Atoi(os.Args[1]); err == nil {
-			n = v
+			N = v
 		}
 	}
 
-	numbers := make([]int, n)
-	for i := 0; i < n; i++ {
-		numbers[i] = i + 1
+	// Генерация случайного массива
+	arr := make([]int, N)
+	for i := 0; i < N; i++ {
+		arr[i] = rand.Int()
 	}
 
-	// A short warm-up run
-	warmUp := make([]int, 100)
-	sort.Ints(warmUp)
+	t0 := nowNs()
+	sort.Ints(arr)
+	t1 := nowNs()
 
-	start := time.Now()
-	sort.Ints(numbers)
-	elapsed := time.Since(start)
-
-	// Output format matching the unified runtime
-	fmt.Printf("TASK=sort_go,N=%d,TIME_NS=%d\n", n, elapsed.Nanoseconds())
-	// Print result to stderr to prevent compiler from optimizing it away
-	fmt.Fprintf(os.Stderr, "Result (last element): %d\n", numbers[n-1])
+	fmt.Printf("TASK=sort,N=%d,TIME_NS=%d\n", N, (t1 - t0))
 }

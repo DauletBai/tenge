@@ -1,30 +1,22 @@
 // FILE: benchmarks/src/c/sort.c
-
-#include "runtime.h" // CORRECTED: Include the unified runtime header
+// Purpose: C qsort benchmark (standalone, no external headers).
+#include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
-// Standard qsort comparison function
-int compare(const void *a, const void *b) {
-    return (*(int*)a - *(int*)b);
+static inline long long now_ns(){
+  struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
+  return (long long)ts.tv_sec*1000000000LL + ts.tv_nsec;
 }
-
-// The core logic is now wrapped in a function for clarity
-void run_sort(int n, int* arr) {
-    qsort(arr, n, sizeof(int), compare);
+static int cmpi(const void* a, const void* b){
+  int ia=*(const int*)a, ib=*(const int*)b; return (ia>ib)-(ia<ib);
 }
-
-int main(int argc, char** argv) {
-    int n = get_n(argc, argv, 100000);
-    int* arr = create_array(n);
-    
-    // The macro now receives a simple, single function call,
-    // ensuring its output matches what the run.sh script expects.
-    TIME_IT_NS(
-        run_sort(n, arr);,
-        "sort_c",
-        n
-    );
-
-    free(arr);
-    return 0;
+int main(int argc, char** argv){
+  int n=(argc>1)?atoi(argv[1]):100000;
+  int* arr=(int*)malloc(sizeof(int)*n);
+  if(!arr){ fprintf(stderr,"alloc fail\n"); return 1; }
+  for(int i=0;i<n;i++){ arr[i]=n-i; }
+  long long t0=now_ns(); qsort(arr,n,sizeof(int),cmpi); long long t1=now_ns();
+  printf("TASK=sort,N=%d,TIME_NS=%lld\n", n, (t1-t0));
+  free(arr); return 0;
 }

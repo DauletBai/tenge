@@ -1,0 +1,3 @@
+# FILE: benchmarks/src/tenge/nbody_cli.tng
+# Placeholder file to trigger AOT emission for nbody in cmd/tenge.
+nbody
