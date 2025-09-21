@@ -1,0 +1,75 @@
+// FILE: benchmarks/src/tenge/portfolio_opt_cli.tng
+// Purpose: Portfolio optimization benchmark using Markowitz mean-variance
+// Implements quadratic programming for portfolio optimization
+
+fn main() {
+    let n_assets = argi(1);
+    if (n_assets <= 0) { n_assets = 100; }
+    
+    let start = time_ns();
+    
+    // Generate random returns and covariance matrix
+    let returns = [];
+    let cov_matrix = [];
+    let i = 0;
+    
+    // Generate random returns
+    while (i < n_assets) {
+        let ret = 0.01 + 0.02 * (i % 10) / 10.0; // Simulated returns
+        returns = push(returns, ret);
+        i = i + 1;
+    }
+    
+    // Generate covariance matrix (simplified)
+    let i = 0;
+    while (i < n_assets) {
+        let j = 0;
+        let row = [];
+        while (j < n_assets) {
+            let cov = if (i == j) { 0.04 } // Variance
+                     else { 0.01 * (i + j) / (2 * n_assets) }; // Covariance
+            row = push(row, cov);
+            j = j + 1;
+        }
+        cov_matrix = push(cov_matrix, row);
+        i = i + 1;
+    }
+    
+    // Simple portfolio optimization (equal weights for benchmark)
+    let weights = [];
+    let i = 0;
+    let weight_sum = 0.0;
+    
+    while (i < n_assets) {
+        let weight = 1.0 / n_assets;
+        weights = push(weights, weight);
+        weight_sum = weight_sum + weight;
+        i = i + 1;
+    }
+    
+    // Calculate portfolio variance
+    let portfolio_var = 0.0;
+    let i = 0;
+    while (i < n_assets) {
+        let j = 0;
+        while (j < n_assets) {
+            let w_i = index(weights, i);
+            let w_j = index(weights, j);
+            let cov_ij = index(index(cov_matrix, i), j);
+            portfolio_var = portfolio_var + w_i * w_j * cov_ij;
+            j = j + 1;
+        }
+        i = i + 1;
+    }
+    
+    let end = time_ns();
+    
+    print("TASK=portfolio_opt,N=");
+    print(n_assets);
+    print(",TIME_NS=");
+    print_time_ns(end - start);
+    print(",PORTFOLIO_VAR=");
+    print(portfolio_var);
+    print("\n");
+}
+

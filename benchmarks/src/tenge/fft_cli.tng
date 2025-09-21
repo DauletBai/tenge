@@ -1,0 +1,68 @@
+// FILE: benchmarks/src/tenge/fft_cli.tng
+// Purpose: Fast Fourier Transform benchmark for signal processing
+// Implements simplified FFT for financial time series analysis
+
+fn main() {
+    let n_points = argi(1);
+    if (n_points <= 0) { n_points = 1024; }
+    
+    let start = time_ns();
+    
+    // Generate complex signal (simplified as real values)
+    let signal = [];
+    let i = 0;
+    while (i < n_points) {
+        let t = i * 2.0 * 3.14159 / n_points;
+        let val = sin(t) + 0.5 * sin(3 * t) + 0.25 * sin(5 * t);
+        signal = push(signal, val);
+        i = i + 1;
+    }
+    
+    // Simplified FFT implementation (DFT)
+    let fft_real = [];
+    let fft_imag = [];
+    let k = 0;
+    
+    while (k < n_points) {
+        let real_sum = 0.0;
+        let imag_sum = 0.0;
+        let n = 0;
+        
+        while (n < n_points) {
+            let angle = -2.0 * 3.14159 * k * n / n_points;
+            let cos_val = cos(angle);
+            let sin_val = sin(angle);
+            let signal_val = index(signal, n);
+            
+            real_sum = real_sum + signal_val * cos_val;
+            imag_sum = imag_sum + signal_val * sin_val;
+            n = n + 1;
+        }
+        
+        fft_real = push(fft_real, real_sum);
+        fft_imag = push(fft_imag, imag_sum);
+        k = k + 1;
+    }
+    
+    // Calculate power spectrum
+    let power_sum = 0.0;
+    i = 0;
+    while (i < n_points) {
+        let real_val = index(fft_real, i);
+        let imag_val = index(fft_imag, i);
+        let power = real_val * real_val + imag_val * imag_val;
+        power_sum = power_sum + power;
+        i = i + 1;
+    }
+    
+    let end = time_ns();
+    
+    print("TASK=fft,N=");
+    print(n_points);
+    print(",TIME_NS=");
+    print_time_ns(end - start);
+    print(",POWER_SUM=");
+    print(power_sum);
+    print("\n");
+}
+

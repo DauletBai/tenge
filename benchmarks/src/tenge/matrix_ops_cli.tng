@@ -1,0 +1,84 @@
+// FILE: benchmarks/src/tenge/matrix_ops_cli.tng
+// Purpose: Matrix operations benchmark for financial calculations
+// Implements matrix multiplication, eigenvalue decomposition simulation
+
+fn main() {
+    let matrix_size = argi(1);
+    if (matrix_size <= 0) { matrix_size = 200; }
+    
+    let start = time_ns();
+    
+    // Generate two random matrices
+    let matrix_a = [];
+    let matrix_b = [];
+    let i = 0;
+    
+    // Generate matrix A
+    while (i < matrix_size) {
+        let j = 0;
+        let row_a = [];
+        while (j < matrix_size) {
+            let val = (i + j) * 0.01; // Simple pattern
+            row_a = push(row_a, val);
+            j = j + 1;
+        }
+        matrix_a = push(matrix_a, row_a);
+        i = i + 1;
+    }
+    
+    // Generate matrix B
+    i = 0;
+    while (i < matrix_size) {
+        let j = 0;
+        let row_b = [];
+        while (j < matrix_size) {
+            let val = (i - j) * 0.01; // Different pattern
+            row_b = push(row_b, val);
+            j = j + 1;
+        }
+        matrix_b = push(matrix_b, row_b);
+        i = i + 1;
+    }
+    
+    // Matrix multiplication C = A * B
+    let matrix_c = [];
+    i = 0;
+    while (i < matrix_size) {
+        let j = 0;
+        let row_c = [];
+        while (j < matrix_size) {
+            let sum = 0.0;
+            let k = 0;
+            while (k < matrix_size) {
+                let a_ik = index(index(matrix_a, i), k);
+                let b_kj = index(index(matrix_b, k), j);
+                sum = sum + a_ik * b_kj;
+                k = k + 1;
+            }
+            row_c = push(row_c, sum);
+            j = j + 1;
+        }
+        matrix_c = push(matrix_c, row_c);
+        i = i + 1;
+    }
+    
+    // Calculate trace (sum of diagonal elements)
+    let trace = 0.0;
+    i = 0;
+    while (i < matrix_size) {
+        let diag_val = index(index(matrix_c, i), i);
+        trace = trace + diag_val;
+        i = i + 1;
+    }
+    
+    let end = time_ns();
+    
+    print("TASK=matrix_ops,N=");
+    print(matrix_size);
+    print(",TIME_NS=");
+    print_time_ns(end - start);
+    print(",TRACE=");
+    print(trace);
+    print("\n");
+}
+

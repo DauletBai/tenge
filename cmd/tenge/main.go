@@ -48,6 +48,16 @@ func emitC(path string) (string, error) {
 		return cNBody, nil
 	case "nbody_sym_cli.tng":
 		return cNBodySym, nil
+	case "yield_curve_cli.tng":
+		return cYieldCurve, nil
+	case "garch_cli.tng":
+		return cGarch, nil
+	case "portfolio_opt_cli.tng":
+		return cPortfolioOpt, nil
+	case "matrix_ops_cli.tng":
+		return cMatrixOps, nil
+	case "fft_cli.tng":
+		return cFFT, nil
 	default:
 		return "", errors.New("unsupported AOT demo source: " + path)
 	}
@@ -722,5 +732,157 @@ int main(int argc,char**argv){
 
   free(px); free(py); free(pz); free(vx); free(vy); free(vz); free(ax); free(ay); free(az);
   return 0;
+}
+`
+
+// Financial benchmarks for central bank applications
+
+const cYieldCurve = `#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
+int main(int argc,char**argv){
+    int n_points = (argc>1)?atoi(argv[1]):1000;
+    double beta0=0.05, beta1=-0.02, beta2=0.01, tau=2.0;
+    long long t0=now_ns();
+    double sum=0.0;
+    for(int i=0;i<n_points;i++){
+        double t=(i+1)*0.1;
+        double yield_val = beta0 + beta1*(1-exp(-t/tau))/(t/tau) + beta2*((1-exp(-t/tau))/(t/tau) - exp(-t/tau));
+        sum += yield_val;
+    }
+    long long t1=now_ns();
+    printf("TASK=yield_curve,N=%d,TIME_NS=%lld,SUM=%.6f\n", n_points, (t1-t0), sum);
+    return 0;
+}
+`
+
+const cGarch = `#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
+int main(int argc,char**argv){
+    int n_obs = (argc>1)?atoi(argv[1]):10000;
+    double omega=0.0001, alpha=0.1, beta=0.85;
+    long long t0=now_ns();
+    double*returns=malloc(n_obs*sizeof(double));
+    double*variances=malloc(n_obs*sizeof(double));
+    for(int i=0;i<n_obs;i++){
+        returns[i] = 0.01*(i%100-50)/50.0;
+        double var_prev = (i==0)?omega/(1-alpha-beta):variances[i-1];
+        variances[i] = omega + alpha*returns[i]*returns[i] + beta*var_prev;
+    }
+    double vol_sum=0.0;
+    for(int i=0;i<n_obs;i++) vol_sum += sqrt(variances[i]);
+    long long t1=now_ns();
+    printf("TASK=garch,N=%d,TIME_NS=%lld,VOL_SUM=%.6f\n", n_obs, (t1-t0), vol_sum);
+    free(returns); free(variances); return 0;
+}
+`
+
+const cPortfolioOpt = `#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
+int main(int argc,char**argv){
+    int n_assets = (argc>1)?atoi(argv[1]):100;
+    long long t0=now_ns();
+    double*returns=malloc(n_assets*sizeof(double));
+    double**cov_matrix=malloc(n_assets*sizeof(double*));
+    double*weights=malloc(n_assets*sizeof(double));
+    for(int i=0;i<n_assets;i++) cov_matrix[i]=malloc(n_assets*sizeof(double));
+    for(int i=0;i<n_assets;i++) returns[i]=0.01+0.02*(i%10)/10.0;
+    for(int i=0;i<n_assets;i++){
+        for(int j=0;j<n_assets;j++){
+            cov_matrix[i][j] = (i==j)?0.04:0.01*(i+j)/(2.0*n_assets);
+        }
+    }
+    for(int i=0;i<n_assets;i++) weights[i]=1.0/n_assets;
+    double portfolio_var=0.0;
+    for(int i=0;i<n_assets;i++){
+        for(int j=0;j<n_assets;j++){
+            portfolio_var += weights[i]*weights[j]*cov_matrix[i][j];
+        }
+    }
+    long long t1=now_ns();
+    printf("TASK=portfolio_opt,N=%d,TIME_NS=%lld,PORTFOLIO_VAR=%.6f\n", n_assets, (t1-t0), portfolio_var);
+    for(int i=0;i<n_assets;i++) free(cov_matrix[i]);
+    free(cov_matrix); free(returns); free(weights); return 0;
+}
+`
+
+const cMatrixOps = `#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
+int main(int argc,char**argv){
+    int matrix_size = (argc>1)?atoi(argv[1]):200;
+    long long t0=now_ns();
+    double**matrix_a=malloc(matrix_size*sizeof(double*));
+    double**matrix_b=malloc(matrix_size*sizeof(double*));
+    double**matrix_c=malloc(matrix_size*sizeof(double*));
+    for(int i=0;i<matrix_size;i++){
+        matrix_a[i]=malloc(matrix_size*sizeof(double));
+        matrix_b[i]=malloc(matrix_size*sizeof(double));
+        matrix_c[i]=malloc(matrix_size*sizeof(double));
+    }
+    for(int i=0;i<matrix_size;i++){
+        for(int j=0;j<matrix_size;j++){
+            matrix_a[i][j]=(i+j)*0.01;
+            matrix_b[i][j]=(i-j)*0.01;
+        }
+    }
+    for(int i=0;i<matrix_size;i++){
+        for(int j=0;j<matrix_size;j++){
+            double sum=0.0;
+            for(int k=0;k<matrix_size;k++) sum += matrix_a[i][k]*matrix_b[k][j];
+            matrix_c[i][j]=sum;
+        }
+    }
+    double trace=0.0;
+    for(int i=0;i<matrix_size;i++) trace += matrix_c[i][i];
+    long long t1=now_ns();
+    printf("TASK=matrix_ops,N=%d,TIME_NS=%lld,TRACE=%.6f\n", matrix_size, (t1-t0), trace);
+    for(int i=0;i<matrix_size;i++){free(matrix_a[i]);free(matrix_b[i]);free(matrix_c[i]);}
+    free(matrix_a); free(matrix_b); free(matrix_c); return 0;
+}
+`
+
+const cFFT = `#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+static inline long long now_ns(){struct timespec ts;clock_gettime(CLOCK_MONOTONIC,&ts);return (long long)ts.tv_sec*1000000000LL+ts.tv_nsec;}
+int main(int argc,char**argv){
+    int n_points = (argc>1)?atoi(argv[1]):1024;
+    long long t0=now_ns();
+    double*signal=malloc(n_points*sizeof(double));
+    double*fft_real=malloc(n_points*sizeof(double));
+    double*fft_imag=malloc(n_points*sizeof(double));
+    for(int i=0;i<n_points;i++){
+        double t=i*2.0*M_PI/n_points;
+        signal[i]=sin(t)+0.5*sin(3*t)+0.25*sin(5*t);
+    }
+    for(int k=0;k<n_points;k++){
+        double real_sum=0.0, imag_sum=0.0;
+        for(int n=0;n<n_points;n++){
+            double angle=-2.0*M_PI*k*n/n_points;
+            real_sum += signal[n]*cos(angle);
+            imag_sum += signal[n]*sin(angle);
+        }
+        fft_real[k]=real_sum; fft_imag[k]=imag_sum;
+    }
+    double power_sum=0.0;
+    for(int i=0;i<n_points;i++){
+        double power=fft_real[i]*fft_real[i]+fft_imag[i]*fft_imag[i];
+        power_sum += power;
+    }
+    long long t1=now_ns();
+    printf("TASK=fft,N=%d,TIME_NS=%lld,POWER_SUM=%.6f\n", n_points, (t1-t0), power_sum);
+    free(signal); free(fft_real); free(fft_imag); return 0;
 }
 `

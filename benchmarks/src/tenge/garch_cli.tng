@@ -1,0 +1,52 @@
+// FILE: benchmarks/src/tenge/garch_cli.tng
+// Purpose: GARCH volatility modeling benchmark
+// Implements GARCH(1,1) model for financial volatility
+
+fn main() {
+    let n_obs = argi(1);
+    if (n_obs <= 0) { n_obs = 10000; }
+    
+    // GARCH(1,1) parameters
+    let omega = 0.0001;  // Constant term
+    let alpha = 0.1;     // ARCH coefficient
+    let beta = 0.85;     // GARCH coefficient
+    
+    let start = time_ns();
+    
+    // Initialize
+    let returns = [];
+    let variances = [];
+    let i = 0;
+    
+    // Generate random returns and calculate GARCH variances
+    while (i < n_obs) {
+        let return_val = 0.01 * (i % 100 - 50) / 50.0; // Simulated returns
+        returns = push(returns, return_val);
+        
+        let var_prev = if (i == 0) { omega / (1 - alpha - beta) } 
+                      else { index(variances, i - 1) };
+        let variance = omega + alpha * return_val * return_val + beta * var_prev;
+        variances = push(variances, variance);
+        
+        i = i + 1;
+    }
+    
+    // Calculate volatility
+    let vol_sum = 0.0;
+    let j = 0;
+    while (j < n_obs) {
+        vol_sum = vol_sum + sqrt(index(variances, j));
+        j = j + 1;
+    }
+    
+    let end = time_ns();
+    
+    print("TASK=garch,N=");
+    print(n_obs);
+    print(",TIME_NS=");
+    print_time_ns(end - start);
+    print(",VOL_SUM=");
+    print(vol_sum);
+    print("\n");
+}
+

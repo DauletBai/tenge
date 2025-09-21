@@ -1,0 +1,9 @@
+[package]
+name = "portfolio_opt"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "portfolio_opt"
+path = "src/main.rs"
+
