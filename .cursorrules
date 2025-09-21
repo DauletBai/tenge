@@ -1,0 +1,10 @@
+SYSTEM_CONTEXT:
+- ALWAYS respond to the user in the chat panel in Russian, unless the user asks for a response in another language.
+- ALL new code comments MUST be written in English.
+- ALL new functions, classes, and methods MUST have JSDoc-style comments. For example:
+
+/**
+ * @param {string} param1 - Description of the first parameter.
+ * @param {number} param2 - Description of the second parameter.
+ * @returns {boolean} Description of the return value.
+ */
