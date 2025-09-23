@@ -5,7 +5,7 @@
 # -------- Toolchain / flags
 CC      := clang
 CSTD    := -std=c11
-CFLAGS  := -O3 -march=native -ffast-math -fno-math-errno -fno-trapping-math -DNDEBUG
+CFLAGS  := -O3 -march=native -ffast-math -fno-math-errno -fno-trapping-math -DNDEBUG -funroll-loops -flto
 LDFLAGS := 
 GO      := go
 CARGO   := cargo
@@ -21,7 +21,7 @@ RUNTIME_O    := $(BIN_DIR)/runtime.o
 C_DIR        := benchmarks/src/c
 C_SORT_SRC   := $(C_DIR)/sort.c
 C_FIBI_SRC   := $(C_DIR)/fib_iter.c
-C_FIBI_FIXED_SRC := $(C_DIR)/fib_iter_fixed.c
+# C_FIBI_FIXED_SRC := $(C_DIR)/fib_iter_fixed.c  # Removed - file doesn't exist
 C_FIBR_SRC   := $(C_DIR)/fib_rec.c
 C_VARM_SRC   := $(C_DIR)/var_monte_carlo.c
 C_VARA_SRC   := $(C_DIR)/var_mc_acc.c
@@ -173,7 +173,7 @@ $(RUNTIME_O): $(RUNTIME_C) $(RUNTIME_H) | $(BIN_DIR)
 # =========================
 # C benchmarks
 # =========================
-cbenches: $(BIN_C_SORT) $(BIN_C_SORT_TENGE) $(BIN_C_FIBI) $(BIN_C_FIBI_FIXED) $(BIN_C_FIBR) $(BIN_C_VARM) $(BIN_C_VARA) $(BIN_C_VARA_IMPROVED) $(BIN_C_VARA_TENGE) $(BIN_C_NBODY) $(BIN_C_NBODYS) $(BIN_C_YIELD) $(BIN_C_GARCH) $(BIN_C_PORTFOLIO) $(BIN_C_MATRIX) $(BIN_C_FFT)
+cbenches: $(BIN_C_SORT) $(BIN_C_SORT_TENGE) $(BIN_C_FIBI) $(BIN_C_FIBR) $(BIN_C_VARM) $(BIN_C_VARA) $(BIN_C_VARA_IMPROVED) $(BIN_C_VARA_TENGE) $(BIN_C_NBODY) $(BIN_C_NBODYS) $(BIN_C_YIELD) $(BIN_C_GARCH) $(BIN_C_PORTFOLIO) $(BIN_C_MATRIX) $(BIN_C_FFT)
 	@echo "[build] C benches built"
 
 $(BIN_C_SORT): $(C_SORT_SRC) $(RUNTIME_O)

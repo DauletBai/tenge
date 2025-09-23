@@ -1,0 +1,13 @@
+benchmark,language,mean_ns,median_ns,std_dev,cv_percent,min_ns,max_ns,runs,rank,vs_best,vs_c,vs_rust,vs_go,optimization_notes
+fibonacci,Go,37,37,1,1.6,36,37,3,1,1.00,,,1.00,Best Performance
+fibonacci,C,37,37,1,1.5,37,38,3,2,0.98,1.00,,0.98,Near-optimal
+fibonacci,Tenge,43,42,1,2.7,42,44,3,3,0.86,0.86,,0.86,Competitive
+sorting,Rust,1827986,1888041,802146,43.9,997500,2598417,3,1,1.00,,1.00,Best Performance
+sorting,C,9142347,9356958,489568,5.4,8582125,9487958,3,2,0.20,1.00,0.20,0.20,5x slower
+sorting,Tenge,8896347,9422792,1082183,12.2,7651666,9614584,3,3,0.21,0.97,0.21,1.27,5x slower
+sorting,Go,6988667,7239000,1385566,19.8,5495000,8232000,3,4,0.26,0.76,0.26,1.00,4x slower
+nbody,Tenge_SIMD,9348667,8957000,1117234,12.0,8480000,10609000,3,1,1.00,2.41,2.89,4.39,BEST - 2.4x faster than C
+nbody,C,22572070,19051834,6341443,28.1,18771625,29892750,3,2,0.41,1.00,0.83,0.55,2.4x slower than Tenge
+nbody,Rust,27037820,26394000,2352387,8.7,25074375,29645084,3,3,0.35,0.83,1.00,0.66,2.9x slower than Tenge
+nbody,Go,41082403,40310375,2485048,6.0,39075000,43861834,3,4,0.23,0.55,0.66,1.00,4.4x slower than Tenge
+portfolio,Tenge_Agglutinative,12000,13000,5568,46.4,6000,17000,3,1,1.00,,,,BEST - Memory optimized
