@@ -21,6 +21,7 @@ RUNTIME_O    := $(BIN_DIR)/runtime.o
 C_DIR        := benchmarks/src/c
 C_SORT_SRC   := $(C_DIR)/sort.c
 C_FIBI_SRC   := $(C_DIR)/fib_iter.c
+C_FIBI_FIXED_SRC := $(C_DIR)/fib_iter_fixed.c
 C_FIBR_SRC   := $(C_DIR)/fib_rec.c
 C_VARM_SRC   := $(C_DIR)/var_monte_carlo.c
 C_VARA_SRC   := $(C_DIR)/var_mc_acc.c
@@ -38,6 +39,7 @@ C_FFT_SRC    := $(C_DIR)/fft.c
 # Go sources (each as a tiny module with main.go)
 GO_SORT_DIR   := benchmarks/src/go/sort
 GO_FIBI_DIR   := benchmarks/src/go/fib_iter
+GO_FIBI_FIXED_DIR := benchmarks/src/go/fib_iter_fixed
 GO_FIBR_DIR   := benchmarks/src/go/fib_rec
 GO_VARM_DIR   := benchmarks/src/go/var_mc
 GO_VARA_DIR   := benchmarks/src/go/var_mc_acc
@@ -49,6 +51,7 @@ GO_ENV        := CGO_ENABLED=0
 # Rust crates (standalone)
 RS_SORT_DIR    := benchmarks/src/rust/sort
 RS_FIBI_DIR    := benchmarks/src/rust/fib_iter
+RS_FIBI_FIXED_DIR := benchmarks/src/rust/fib_iter_fixed
 RS_FIBR_DIR    := benchmarks/src/rust/fib_rec
 RS_VARM_DIR    := benchmarks/src/rust/var_mc
 RS_VARA_DIR    := benchmarks/src/rust/var_mc_acc
@@ -76,6 +79,7 @@ TNG_NBODYS_TNG  :=$(TNG_SRC_DIR)/nbody_sym_cli.tng
 BIN_TENGE          := $(BIN_DIR)/tenge
 BIN_C_SORT         := $(BIN_DIR)/sort_c
 BIN_C_FIBI         := $(BIN_DIR)/fib_iter_c
+BIN_C_FIBI_FIXED   := $(BIN_DIR)/fib_iter_c_fixed
 BIN_C_FIBR         := $(BIN_DIR)/fib_rec_c
 BIN_C_VARM         := $(BIN_DIR)/var_mc_c
 BIN_C_VARA         := $(BIN_DIR)/var_mc_c_acc
@@ -92,6 +96,7 @@ BIN_C_FFT          := $(BIN_DIR)/fft_c
 
 BIN_GO_SORT        := $(BIN_DIR)/sort_go
 BIN_GO_FIBI        := $(BIN_DIR)/fib_iter_go
+BIN_GO_FIBI_FIXED  := $(BIN_DIR)/fib_iter_go_fixed
 BIN_GO_FIBR        := $(BIN_DIR)/fib_rec_go
 BIN_GO_VARM        := $(BIN_DIR)/var_mc_go
 BIN_GO_VARA        := $(BIN_DIR)/var_mc_go_acc
@@ -101,6 +106,7 @@ BIN_GO_NBODYS      := $(BIN_DIR)/nbody_go_sym
 
 BIN_RS_SORT        := $(BIN_DIR)/sort_rs
 BIN_RS_FIBI        := $(BIN_DIR)/fib_iter_rs
+BIN_RS_FIBI_FIXED  := $(BIN_DIR)/fib_iter_rs_fixed
 BIN_RS_FIBR        := $(BIN_DIR)/fib_rec_rs
 BIN_RS_VARM        := $(BIN_DIR)/var_mc_rs
 BIN_RS_VARA        := $(BIN_DIR)/var_mc_rs_acc
@@ -167,7 +173,7 @@ $(RUNTIME_O): $(RUNTIME_C) $(RUNTIME_H) | $(BIN_DIR)
 # =========================
 # C benchmarks
 # =========================
-cbenches: $(BIN_C_SORT) $(BIN_C_SORT_TENGE) $(BIN_C_FIBI) $(BIN_C_FIBR) $(BIN_C_VARM) $(BIN_C_VARA) $(BIN_C_VARA_IMPROVED) $(BIN_C_VARA_TENGE) $(BIN_C_NBODY) $(BIN_C_NBODYS) $(BIN_C_YIELD) $(BIN_C_GARCH) $(BIN_C_PORTFOLIO) $(BIN_C_MATRIX) $(BIN_C_FFT)
+cbenches: $(BIN_C_SORT) $(BIN_C_SORT_TENGE) $(BIN_C_FIBI) $(BIN_C_FIBI_FIXED) $(BIN_C_FIBR) $(BIN_C_VARM) $(BIN_C_VARA) $(BIN_C_VARA_IMPROVED) $(BIN_C_VARA_TENGE) $(BIN_C_NBODY) $(BIN_C_NBODYS) $(BIN_C_YIELD) $(BIN_C_GARCH) $(BIN_C_PORTFOLIO) $(BIN_C_MATRIX) $(BIN_C_FFT)
 	@echo "[build] C benches built"
 
 $(BIN_C_SORT): $(C_SORT_SRC) $(RUNTIME_O)
@@ -202,6 +208,10 @@ $(BIN_C_FIBI): $(C_FIBI_SRC) $(RUNTIME_O)
 	@echo "[build] c_fib_iter -> $(BIN_C_FIBI)"
 	@$(CC) $(CSTD) $(CFLAGS) $(C_FIBI_SRC) $(RUNTIME_O) -I$(RUNTIME_DIR) -o $(BIN_C_FIBI) $(LDFLAGS)
 
+$(BIN_C_FIBI_FIXED): $(C_FIBI_FIXED_SRC) $(RUNTIME_O)
+	@echo "[build] c_fib_iter_fixed -> $(BIN_C_FIBI_FIXED)"
+	@$(CC) $(CSTD) $(CFLAGS) $(C_FIBI_FIXED_SRC) $(RUNTIME_O) -I$(RUNTIME_DIR) -o $(BIN_C_FIBI_FIXED) $(LDFLAGS)
+
 $(BIN_C_FIBR): $(C_FIBR_SRC) $(RUNTIME_O)
 	@echo "[build] c_fib_rec -> $(BIN_C_FIBR)"
 	@$(CC) $(CSTD) $(CFLAGS) $(C_FIBR_SRC) $(RUNTIME_O) -I$(RUNTIME_DIR) -o $(BIN_C_FIBR) $(LDFLAGS)
@@ -233,7 +243,7 @@ $(BIN_C_NBODYS): $(C_NBODYS_SRC) $(RUNTIME_O)
 # =========================
 # Go benchmarks (build only if folders exist)
 # =========================
-gobenches: $(BIN_GO_SORT) $(BIN_GO_FIBI) $(BIN_GO_FIBR) $(BIN_GO_VARM) $(BIN_GO_VARA) $(BIN_GO_VARA_IMPROVED) $(BIN_GO_NBODY) $(BIN_GO_NBODYS)
+gobenches: $(BIN_GO_SORT) $(BIN_GO_FIBI) $(BIN_GO_FIBI_FIXED) $(BIN_GO_FIBR) $(BIN_GO_VARM) $(BIN_GO_VARA) $(BIN_GO_VARA_IMPROVED) $(BIN_GO_NBODY) $(BIN_GO_NBODYS)
 
 $(BIN_GO_SORT):
 	@if [ -d "$(GO_SORT_DIR)" ]; then \
@@ -265,6 +275,14 @@ $(BIN_GO_FIBI):
 		cd $(GO_FIBI_DIR) && $(GO) build -o ../../../..//$(BIN_GO_FIBI) . ; \
 	else \
 		echo "  [skip] $(GO_FIBI_DIR) not found"; \
+	fi
+
+$(BIN_GO_FIBI_FIXED):
+	@if [ -d "$(GO_FIBI_FIXED_DIR)" ]; then \
+		echo "[build] go_fib_iter_fixed -> $(BIN_GO_FIBI_FIXED)"; \
+		cd $(GO_FIBI_FIXED_DIR) && $(GO) build -o ../../../..//$(BIN_GO_FIBI_FIXED) . ; \
+	else \
+		echo "  [skip] $(GO_FIBI_FIXED_DIR) not found"; \
 	fi
 
 $(BIN_GO_FIBR):
@@ -302,7 +320,7 @@ $(BIN_GO_VARA_IMPROVED):
 # =========================
 # Rust benchmarks (per crate, only if Cargo.toml exists)
 # =========================
-rustbenches: $(BIN_RS_SORT) $(BIN_RS_FIBI) $(BIN_RS_FIBR) $(BIN_RS_VARM) $(BIN_RS_VARA) $(BIN_RS_VARA_IMPROVED) $(BIN_RS_NBODY) $(BIN_RS_NBODYS)
+rustbenches: $(BIN_RS_SORT) $(BIN_RS_FIBI) $(BIN_RS_FIBI_FIXED) $(BIN_RS_FIBR) $(BIN_RS_VARM) $(BIN_RS_VARA) $(BIN_RS_VARA_IMPROVED) $(BIN_RS_NBODY) $(BIN_RS_NBODYS)
 
 define RS_BUILD_RULE
 $(1):
@@ -321,6 +339,7 @@ endef
 
 $(eval $(call RS_BUILD_RULE,$(BIN_RS_SORT),$(RS_SORT_DIR),sort_rs))
 $(eval $(call RS_BUILD_RULE,$(BIN_RS_FIBI),$(RS_FIBI_DIR),fib_iter))
+$(eval $(call RS_BUILD_RULE,$(BIN_RS_FIBI_FIXED),$(RS_FIBI_FIXED_DIR),fib_iter_fixed))
 $(eval $(call RS_BUILD_RULE,$(BIN_RS_FIBR),$(RS_FIBR_DIR),fib_rec))
 $(eval $(call RS_BUILD_RULE,$(BIN_RS_VARM),$(RS_VARM_DIR),var_mc))
 $(eval $(call RS_BUILD_RULE,$(BIN_RS_VARA),$(RS_VARA_DIR),var_mc_acc))

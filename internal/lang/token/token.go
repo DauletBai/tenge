@@ -22,46 +22,46 @@ const (
 	EOF     = "EOF"     // End of File
 
 	// Identifiers & Literals
-	IDENT     = "IDENT"      // a, myVar, etc.
-	SAN_LIT   = "SAN_LIT"    // 123
-	AQSHA_LIT = "AQSHA_LIT"  // 12.34
-	JOL_LIT   = "JOL_LIT"    // "hello"
+	IDENT     = "IDENT"     // a, myVar, etc.
+	SAN_LIT   = "SAN_LIT"   // 123
+	AQSHA_LIT = "AQSHA_LIT" // 12.34
+	JOL_LIT   = "JOL_LIT"   // "hello"
 
-	// Keywords
-	JASA    = "jasa"
-	BEKIT   = "bekit"
-	ATQARM  = "atqar'm"
-	QAITAR  = "qaıtar"
-	EGER    = "eger"
-	AITPECE = "áıtpece"
-	AZIRSHE = "ázirshe"
-	JAN     = "jan"
-	JYN     = "j'n"
-	KORSET  = "kórset"
+	// Keywords - Official Latin Kazakh
+	JASA    = "jasau"   // create/declare
+	BEKIT   = "bekit"   // constant
+	ATQAR   = "atqar"   // function
+	QAYTAR  = "qaytar"  // return
+	EGER    = "eger"    // if
+	AITPESE = "aitpese" // else
+	AZIRSHE = "azirshe" // while
+	JAN     = "jan"     // true
+	JIN     = "jin"     // false
+	KORSET  = "korset"  // show/print
 
-	// Types
-	SAN    = "san"
-	AQSHA  = "aqsha"
-	JOL    = "jol"
-	TANBA  = "tańba"
-	AQIQAT = "aqıqat"
-	JYIM   = "j'i'm"
+	// Types - Official Latin Kazakh
+	SAN    = "san"    // number/int
+	AQSHA  = "aqsha"  // money/decimal
+	JOL    = "jol"    // string
+	TANBA  = "tanba"  // equal
+	AQIQAT = "aqiqat" // boolean
+	JIM    = "jim"    // arrow
 
-	// Operators
-	ASSIGN    = "="
-	PLUS      = "+"
-	MINUS     = "-"
-	MULTIPLY  = "*"
-	DIVIDE    = "/"
-	EQUAL     = "=="
-	GREATER   = ">"
+	// Operators - Kazakh translations
+	TAYINDAU = "="  // assignment (тағайындау)
+	KOSU     = "+"  // addition (қосу)
+	AZAYTU   = "-"  // subtraction (азайту)
+	KOBEYTU  = "*"  // multiplication (көбейту)
+	BOLU     = "/"  // division (бөлу)
+	TEN      = "==" // equality (тең)
+	ULKEN    = ">"  // greater than (үлкен)
 
-	// Delimiters
-	COMMA     = ","
-	COLON     = ":"
-	LPAREN    = "("
-	RPAREN    = ")"
-	LBRACKET  = "["
-	RBRACKET  = "]"
-	ARROW     = "->"
+	// Delimiters - Kazakh translations
+	VIRGUL    = ","  // comma (үтір)
+	EKI_NUQTA = ":"  // colon (екі нүкте)
+	SOL_JAI   = "("  // left parenthesis (сол жақ)
+	ON_JAI    = ")"  // right parenthesis (оң жақ)
+	SOL_KOSHA = "["  // left bracket (сол қосша)
+	ON_KOSHA  = "]"  // right bracket (оң қосша)
+	OK        = "->" // arrow (оқ)
 )

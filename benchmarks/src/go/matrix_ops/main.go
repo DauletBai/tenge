@@ -52,3 +52,4 @@ func main() {
 	elapsed := time.Since(t0)
 	fmt.Printf("TASK=matrix_ops,N=%d,TIME_NS=%d,TRACE=%.6f\n", matrixSize, elapsed.Nanoseconds(), trace)
 }
+

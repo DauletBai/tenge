@@ -9,6 +9,10 @@ fn main() {
   let reps = argi(2);
   if (reps <= 0) { reps = 2000; }
 
+  // Warm-up
+  let _ = fib(n);
+
+  // Clean measurement
   let start = time_ns();
   let i = 0;
   let last = 0;
@@ -18,6 +22,8 @@ fn main() {
   }
   let end = time_ns();
 
+  // Output after measurement
+  print("Result: ");
   print(last);
   print_time_ns(end - start);  
 }

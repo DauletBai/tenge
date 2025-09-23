@@ -1,7 +1,10 @@
 // FILE: internal/aotminic/runtime/runtime.h
 
-#ifndef tenge_RUNTIME_H
-#define tenge_RUNTIME_H
+#ifndef TENRE_RUNTIME_H
+#define TENRE_RUNTIME_H
+
+/* Monotonic time in nanoseconds */
+long long now_ns(void);
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,4 +28,4 @@ int* create_array(int n);
         printf("TASK=%s,N=%d,TIME_NS=%lld\n", task_name, n, time_ns);         \
     } while (0)
 
-#endif // tenge_RUNTIME_H
+#endif /* TENRE_RUNTIME_H */

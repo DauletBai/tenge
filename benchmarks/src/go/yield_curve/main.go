@@ -34,3 +34,4 @@ func main() {
 	elapsed := time.Since(t0)
 	fmt.Printf("TASK=yield_curve,N=%d,TIME_NS=%d,SUM=%.6f\n", nPoints, elapsed.Nanoseconds(), sum)
 }
+

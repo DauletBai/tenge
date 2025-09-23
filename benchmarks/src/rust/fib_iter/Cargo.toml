@@ -1,9 +1,9 @@
 [package]
-name = "fib_iter"
+name = "fib_iter_fixed"
 version = "0.1.0"
 edition = "2021"
 
-[profile.release]
-lto = true
-codegen-units = 1
-opt-level = 3
+[[bin]]
+name = "fib_iter_fixed"
+path = "src/main.rs"
+

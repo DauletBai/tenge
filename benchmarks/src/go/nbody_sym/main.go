@@ -1,6 +1,4 @@
 // FILE: benchmarks/src/go/nbody_sym/main.go
-// Purpose: Symmetric N-body (i<j) with SoA + tiling + temp buffers.
-
 package main
 
 import (

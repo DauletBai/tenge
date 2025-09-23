@@ -53,3 +53,4 @@ func main() {
 	elapsed := time.Since(t0)
 	fmt.Printf("TASK=portfolio_opt,N=%d,TIME_NS=%d,PORTFOLIO_VAR=%.6f\n", nAssets, elapsed.Nanoseconds(), portfolioVar)
 }
+

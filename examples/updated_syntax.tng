@@ -1,0 +1,52 @@
+// Tenge Language - Updated Syntax with Official Latin Kazakh
+// Пример кода с обновленными ключевыми словами
+
+// Константы
+bekit PI: aqsha = 3.14159
+bekit MAX_SIZE: san = 1000
+
+// Переменные
+jasau name: jol = "Tenge Language"
+jasau age: san = 25
+jasau is_active: aqiqat = jan
+
+// Функция
+atqar calculate_circle_area(radius: aqsha): aqsha {
+    area = PI * radius * radius
+    qaytar area
+}
+
+// Условные операторы
+eger age > 18 {
+    korset "Adult user"
+} aitpese {
+    korset "Minor user"
+}
+
+// Циклы
+azirshe age < 100 {
+    age = age + 1
+    korset "Age: " + age
+}
+
+// Основная функция
+atqar main(): san {
+    korset "Welcome to Tenge Language!"
+    
+    // Вызов функции
+    radius: aqsha = 5.0
+    area = calculate_circle_area(radius)
+    korset "Circle area: " + area
+    
+    // Работа с массивами
+    jasau numbers: san[] = [1, 2, 3, 4, 5]
+    
+    // Итерация по массиву
+    azirshe i < len(numbers) {
+        korset "Number: " + numbers[i]
+        i = i + 1
+    }
+    
+    qaytar 0
+}
+

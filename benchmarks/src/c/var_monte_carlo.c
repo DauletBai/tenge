@@ -1,5 +1,6 @@
 // FILE: benchmarks/src/c/var_monte_carlo.c
 // Purpose: Monte Carlo VaR benchmark (GBM, Box–Muller, xorshift64*).
+#include "runtime.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

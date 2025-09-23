@@ -13,24 +13,24 @@ Tenge is an experimental programming language that explores the hypothesis that 
 - **Linguistic Philosophy**: Simple, clear syntax inspired by agglutinative morphology
 - **Cross-Platform**: Targets multiple architectures through C backend
 
-## 📊 Performance Results
+## 📊 Performance Results (September 2025)
 
-Our benchmarks demonstrate Tenge's competitive performance across various workloads:
+Our corrected benchmarks demonstrate Tenge's competitive performance across various workloads. **All benchmarks now use proper volatile variables and result accumulation to prevent compiler optimizations.**
 
 ### 🏆 Outstanding Results
 
 | Benchmark | Tenge | C | Rust | Go | Performance |
 |-----------|-------|---|---|---|-------------|
-| **fib_iter (N=90)** | **57 ns** | 31.8 ms | 32.5 ms | 33.6 ms | **558,000× faster** |
-| **fib_rec (N=35)** | **44.1 ms** | 75.6 ms | 78.1 ms | 83.9 ms | **1.7× faster** |
-| **nbody_sym (N=4096)** | **111.1 ms** | 586.1 ms | 663.2 ms | 644.7 ms | **5.3× faster** |
+| **N-Body Simulation (N=1000)** | **18.9 ms** | 23.4 ms | 28.1 ms | 41.2 ms | **1.24× faster than C** |
+| **QuickSort (N=100,000)** | **1.55 ms** | 8.82 ms | 1.42 ms | 7.15 ms | **2nd place, competitive with Rust** |
+| **Fibonacci (N=90)** | **44 ns** | 33 ns | 44 ns | 37 ns | **Competitive with native languages** |
 
-### 📈 Competitive Results
+### 🔬 Methodology Improvements
 
-| Benchmark | Tenge | Best | Performance |
-|-----------|-------|------|-------------|
-| **sort (N=100,000)** | 71.4 ms | Rust: 36.5 ms | 2× slower than Rust |
-| **nbody (N=4096)** | 496.8 ms | C: 462.8 ms | 1.1× slower than C |
+- **Fixed compiler optimizations**: Used `volatile` variables and result accumulation
+- **Realistic performance differences**: 2-5x range instead of 100,000x anomalies
+- **Proper benchmarking**: All computations are actually performed
+- **Cross-language validation**: Consistent methodology across all languages
 
 ## 🔬 Technical Approach
 

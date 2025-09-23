@@ -1,0 +1,13 @@
+benchmark,language,time_ns,relative_performance,rank,date
+fibonacci,C,33,1.00,1,2025-09-23
+fibonacci,Go,37,0.89,2,2025-09-23
+fibonacci,Tenge,44,0.75,3,2025-09-23
+fibonacci,Rust,44,0.75,3,2025-09-23
+sort,Rust,1420875,1.00,1,2025-09-23
+sort,Tenge,1554000,0.91,2,2025-09-23
+sort,Go,7154000,0.20,3,2025-09-23
+sort,C,8821291,0.16,4,2025-09-23
+nbody,Tenge,18856000,1.00,1,2025-09-23
+nbody,C,23382584,0.81,2,2025-09-23
+nbody,Rust,28083041,0.67,3,2025-09-23
+nbody,Go,41156291,0.46,4,2025-09-23

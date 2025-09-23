@@ -1,0 +1,36 @@
+// Usage: sort_cli_pdq <N>
+fn main() {
+  let n = argi(1);
+  if (n <= 0) { n = 100000; }
+  
+  // Warm-up
+  let arr = [];
+  let i = 0;
+  while (i < 10) {
+    arr = push(arr, n - i);
+    i = i + 1;
+  }
+  arr = sort(arr);
+  
+  // Clean measurement
+  let start = time_ns();
+  
+  // Build array [n, n-1, ..., 1]
+  let arr = [];
+  let i = 0;
+  while (i < n) {
+    arr = push(arr, n - i);
+    i = i + 1;
+  }
+  
+  // Sort using PDQ sort (simplified)
+  arr = sort(arr);
+  
+  let end = time_ns();
+  
+  // Output after measurement
+  print("Result (last element): ");
+  print(index(arr, len(arr) - 1));
+  print_time_ns(end - start);
+}
+

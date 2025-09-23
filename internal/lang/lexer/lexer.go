@@ -10,22 +10,22 @@ import (
 )
 
 var keywords = map[string]token.TokenType{
-	"jasa":    token.JASA,
-	"bekit":   token.BEKIT,
-	"atqar'm": token.ATQARM,
-	"qaıtar":  token.QAITAR,
-	"eger":    token.EGER,
-	"áıtpece": token.AITPECE,
-	"ázirshe": token.AZIRSHE,
-	"jan":     token.JAN,
-	"j'n":     token.JYN,
-	"kórset":  token.KORSET,
-	"san":     token.SAN,
-	"aqsha":   token.AQSHA, 
-	"jol":     token.JOL,
-	"tańba":   token.TANBA,
-	"aqıqat":  token.AQIQAT,
-	"j'i'm":   token.JYIM,
+	"jasau":   token.JASA,    // create/declare
+	"bekit":   token.BEKIT,   // constant
+	"atqar":   token.ATQAR,   // function
+	"qaytar":  token.QAYTAR,  // return
+	"eger":    token.EGER,    // if
+	"aitpese": token.AITPESE, // else
+	"azirshe": token.AZIRSHE, // while
+	"jan":     token.JAN,     // true
+	"jin":     token.JIN,     // false
+	"korset":  token.KORSET,  // show/print
+	"san":     token.SAN,     // number/int
+	"aqsha":   token.AQSHA,   // money/decimal
+	"jol":     token.JOL,     // string
+	"tanba":   token.TANBA,   // equal
+	"aqiqat":  token.AQIQAT,  // boolean
+	"jim":     token.JIM,     // arrow
 }
 
 func LookupIdent(ident string) token.TokenType {
@@ -80,7 +80,6 @@ func (l *Lexer) readNumber() (tokType token.TokenType, lit string) {
 	return tokType, l.input[startPosition:l.position]
 }
 
-
 func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 	l.skipWhitespace()
@@ -91,42 +90,42 @@ func (l *Lexer) NextToken() token.Token {
 			ch := l.ch
 			l.readChar()
 			literal := string(ch) + string(l.ch)
-			tok = token.Token{Type: token.TANBA, Literal: literal}
+			tok = token.Token{Type: token.TEN, Literal: literal}
 		} else {
-			tok = newToken(token.ASSIGN, l.ch)
+			tok = newToken(token.TAYINDAU, l.ch)
 		}
 	case ':':
-		tok = newToken(token.COLON, l.ch)
+		tok = newToken(token.EKI_NUQTA, l.ch)
 	case '(':
-		tok = newToken(token.LPAREN, l.ch)
+		tok = newToken(token.SOL_JAI, l.ch)
 	case ')':
-		tok = newToken(token.RPAREN, l.ch)
+		tok = newToken(token.ON_JAI, l.ch)
 	case ',':
-		tok = newToken(token.COMMA, l.ch)
+		tok = newToken(token.VIRGUL, l.ch)
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		tok = newToken(token.KOSU, l.ch)
 	case '-':
 		if l.peekChar() == '>' {
 			ch := l.ch
 			l.readChar()
 			literal := string(ch) + string(l.ch)
-			tok = token.Token{Type: token.JYIM, Literal: literal}
+			tok = token.Token{Type: token.OK, Literal: literal}
 		} else {
-			tok = newToken(token.MINUS, l.ch)
+			tok = newToken(token.AZAYTU, l.ch)
 		}
 	case '*':
-		tok = newToken(token.MULTIPLY, l.ch)
+		tok = newToken(token.KOBEYTU, l.ch)
 	case '/':
-		tok = newToken(token.DIVIDE, l.ch)
+		tok = newToken(token.BOLU, l.ch)
 	case '>':
-		tok = newToken(token.GREATER, l.ch)
+		tok = newToken(token.ULKEN, l.ch)
 	case '"':
-		tok.Type = token.JOL
+		tok.Type = token.JOL_LIT
 		tok.Literal = l.readString()
 	case '[':
-		tok = newToken(token.LBRACKET, l.ch)
+		tok = newToken(token.SOL_KOSHA, l.ch)
 	case ']':
-		tok = newToken(token.RBRACKET, l.ch)
+		tok = newToken(token.ON_KOSHA, l.ch)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF

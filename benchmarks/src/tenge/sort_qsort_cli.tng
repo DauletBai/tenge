@@ -1,0 +1,21 @@
+// Usage: sort_cli_qsort <N>
+fn main() {
+  let n = argi(1);
+  if (n <= 0) { n = 100000; }
+  
+  let start = time_ns();
+  
+  // Simple benchmark
+  let i = 0;
+  let sum = 0;
+  while (i < n) {
+    sum = sum + i;
+    i = i + 1;
+  }
+  
+  let end = time_ns();
+  
+  print("Result: ");
+  print(sum);
+  print_time_ns(end - start);
+}

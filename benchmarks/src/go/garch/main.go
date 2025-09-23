@@ -42,3 +42,4 @@ func main() {
 	elapsed := time.Since(t0)
 	fmt.Printf("TASK=garch,N=%d,TIME_NS=%d,VOL_SUM=%.6f\n", nObs, elapsed.Nanoseconds(), volSum)
 }
+

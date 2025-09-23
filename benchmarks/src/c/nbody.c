@@ -1,112 +1,102 @@
-// FILE: benchmarks/src/c/nbody.c
-// Purpose: N-body benchmark (gravity, velocity-Verlet). Deterministic init and timing.
+// benchmarks/src/c/nbody.c
+// Naive O(N^2) N-body stepper (Structure-of-Arrays). Uses shared runtime now_ns().
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <time.h>
+#include <stdint.h>
+#include "runtime.h"
 
-typedef struct { double x,y,z; } vec3;
+#ifndef SOFTENING
+#define SOFTENING 1e-9
+#endif
 
-static inline long long now_ns(){
-  struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
-  return (long long)ts.tv_sec*1000000000LL + ts.tv_nsec;
+static inline double rsqrt(double x) {
+    return 1.0 / sqrt(x);
 }
 
-static inline void vadd(vec3* a, vec3 b){ a->x+=b.x; a->y+=b.y; a->z+=b.z; }
-static inline vec3 vsub(vec3 a, vec3 b){ vec3 r={a.x-b.x,a.y-b.y,a.z-b.z}; return r; }
-static inline vec3 smul(vec3 a, double s){ vec3 r={a.x*s,a.y*s,a.z*s}; return r; }
-static inline double dot(vec3 a, vec3 b){ return a.x*b.x + a.y*b.y + a.z*b.z; }
-
-static unsigned long long xs = 0x9E3779B97F4A7C15ULL;
-static inline unsigned long long n64(){
-  unsigned long long x=xs; x^=x>>12; x^=x<<25; x^=x>>27; xs=x; return x*0x2545F4914F6CDD1DULL;
+static void init_state(size_t n, double *x, double *y, double *z,
+                       double *vx, double *vy, double *vz, double *m)
+{
+    // Deterministic initialization for reproducibility
+    // Puts bodies on three sinusoids with small velocities.
+    for (size_t i = 0; i < n; ++i) {
+        double t = (double)i;
+        x[i]  = sin(0.001 * t) * 100.0;
+        y[i]  = cos(0.0013 * t) * 100.0;
+        z[i]  = sin(0.00077 * t) * 100.0;
+        vx[i] = 0.001 * cos(0.0002 * t);
+        vy[i] = 0.001 * sin(0.0003 * t);
+        vz[i] = 0.001 * cos(0.0005 * t);
+        m[i]  = 1.0; // unit mass
+    }
 }
-static inline double u01(){
-  return (double)(n64()>>11) * (1.0/9007199254740992.0);
-}
 
-int main(int argc, char** argv){
-  int N    = (argc>1)?atoi(argv[1]):4096;
-  int step = (argc>2)?atoi(argv[2]):10;
-  double dt= (argc>3)?atof(argv[3]):1e-3;
+int main(int argc, char **argv)
+{
+    const size_t N      = (argc > 1) ? (size_t)atoll(argv[1]) : 4096;
+    const int    steps  = (argc > 2) ? atoi(argv[2]) : 10;
+    const double dt     = (argc > 3) ? atof(argv[3]) : 0.001;
 
-  vec3* pos = (vec3*)malloc(sizeof(vec3)*N);
-  vec3* vel = (vec3*)malloc(sizeof(vec3)*N);
-  vec3* acc = (vec3*)malloc(sizeof(vec3)*N);
-  double* m = (double*)malloc(sizeof(double)*N);
+    double *x  = (double*)malloc(N * sizeof(double));
+    double *y  = (double*)malloc(N * sizeof(double));
+    double *z  = (double*)malloc(N * sizeof(double));
+    double *vx = (double*)malloc(N * sizeof(double));
+    double *vy = (double*)malloc(N * sizeof(double));
+    double *vz = (double*)malloc(N * sizeof(double));
+    double *m  = (double*)malloc(N * sizeof(double));
 
-  // deterministic init in unit cube, mild velocities
-  xs = 123456789ULL;
-  for(int i=0;i<N;i++){
-    pos[i].x = u01(); pos[i].y = u01(); pos[i].z = u01();
-    vel[i].x = (u01()-0.5)*1e-3; vel[i].y = (u01()-0.5)*1e-3; vel[i].z = (u01()-0.5)*1e-3;
-    acc[i].x = acc[i].y = acc[i].z = 0.0;
-    m[i] = 1.0; // unit masses
-  }
-
-  const double G = 1.0;
-  const double eps2 = 1e-9; // softening
-
-  // initial acceleration
-  for(int i=0;i<N;i++){
-    vec3 ai={0,0,0};
-    for(int j=0;j<N;j++){
-      if(i==j) continue;
-      vec3 rij = vsub(pos[j], pos[i]);
-      double r2 = dot(rij,rij) + eps2;
-      double inv = 1.0/sqrt(r2*r2*r2);
-      double s = G*m[j]*inv;
-      vadd(&ai, smul(rij,s));
+    if (!x || !y || !z || !vx || !vy || !vz || !m) {
+        fprintf(stderr, "Allocation failed\n");
+        return 1;
     }
-    acc[i]=ai;
-  }
 
-  long long t0 = now_ns();
-  // velocity-Verlet steps
-  for(int s=0; s<step; s++){
-    // x(t+dt) = x(t) + v(t)*dt + 0.5*a(t)*dt^2
-    for(int i=0;i<N;i++){
-      vec3 dx = smul(vel[i],dt);
-      vec3 aa = smul(acc[i], 0.5*dt*dt);
-      vadd(&pos[i], dx); vadd(&pos[i], aa);
+    init_state(N, x, y, z, vx, vy, vz, m);
+
+    const double eps2 = SOFTENING * SOFTENING;
+
+    long long t0 = now_ns();
+
+    for (int s = 0; s < steps; ++s) {
+        // Compute accelerations and update velocities
+        for (size_t i = 0; i < N; ++i) {
+            double ax = 0.0, ay = 0.0, az = 0.0;
+            const double xi = x[i], yi = y[i], zi = z[i];
+
+            for (size_t j = 0; j < N; ++j) {
+                if (j == i) continue;
+                double dx = x[j] - xi;
+                double dy = y[j] - yi;
+                double dz = z[j] - zi;
+                double r2 = dx*dx + dy*dy + dz*dz + eps2;
+                double inv_r = rsqrt(r2);
+                double inv_r3 = inv_r * inv_r * inv_r;
+                double s_ = m[j] * inv_r3;
+                ax += dx * s_;
+                ay += dy * s_;
+                az += dz * s_;
+            }
+
+            vx[i] += ax * dt;
+            vy[i] += ay * dt;
+            vz[i] += az * dt;
+        }
+
+        // Integrate positions
+        for (size_t i = 0; i < N; ++i) {
+            x[i] += vx[i] * dt;
+            y[i] += vy[i] * dt;
+            z[i] += vz[i] * dt;
+        }
     }
-    // a(t+dt)
-    for(int i=0;i<N;i++){
-      vec3 ai={0,0,0};
-      for(int j=0;j<N;j++){
-        if(i==j) continue;
-        vec3 rij = vsub(pos[j], pos[i]);
-        double r2 = dot(rij,rij) + eps2;
-        double inv = 1.0/sqrt(r2*r2*r2);
-        double sF = G*m[j]*inv;
-        vadd(&ai, smul(rij,sF));
-      }
-      // v(t+dt) = v(t) + 0.5*(a(t)+a(t+dt))*dt
-      vec3 half = smul(acc[i], 0.5*dt);
-      vadd(&half, smul(ai, 0.5*dt));
-      vadd(&vel[i], half);
-      acc[i]=ai;
-    }
-  }
-  long long t1 = now_ns();
 
-  // energy (diagnostic)
-  double KE=0, PE=0;
-  for(int i=0;i<N;i++){
-    KE += 0.5*m[i]*dot(vel[i],vel[i]);
-  }
-  for(int i=0;i<N;i++){
-    for(int j=i+1;j<N;j++){
-      vec3 rij=vsub(pos[j],pos[i]);
-      double r = sqrt(dot(rij,rij)+eps2);
-      PE += -G*m[i]*m[j]/r;
-    }
-  }
-  double E = KE+PE;
+    long long t1 = now_ns();
 
-  printf("TASK=nbody,N=%d,TIME_NS=%lld,ENERGY=%.9f\n", N, (t1-t0), E);
+    // Emit a uniform, machine-parsable line (same style as other C benches)
+    printf("TASK=nbody,N=%zu,STEPS=%d,DT=%.6f,TIME_NS=%lld\n", N, steps, dt, (t1 - t0));
 
-  free(pos); free(vel); free(acc); free(m);
-  return 0;
+    free(x); free(y); free(z);
+    free(vx); free(vy); free(vz);
+    free(m);
+    return 0;
 }

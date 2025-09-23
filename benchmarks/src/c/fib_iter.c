@@ -1,41 +1,47 @@
-// FILE: benchmarks/src/c/fib_iter.c
-// Purpose: Iterative Fibonacci microbenchmark. Prints TIME_NS in nanoseconds.
-
-#include <stdio.h>
+// FILE: benchmarks/src/c/fib_iter_fixed.c
+// Fixed version with same methodology as Tenge
+#include "runtime.h"
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 
-#if defined(__APPLE__)
-  #include <mach/mach_time.h>
-  static inline long long now_ns(void) {
-    static mach_timebase_info_data_t info = {0,0};
-    if (info.denom == 0) mach_timebase_info(&info);
-    // mach_absolute_time returns ticks; convert to ns
-    return (long long)((__uint128_t)mach_absolute_time() * info.numer / info.denom);
-  }
-#else
-  #include <time.h>
-  static inline long long now_ns(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (long long)ts.tv_sec * 1000000000LL + ts.tv_nsec;
-  }
-#endif
+/* Explicit prototype to avoid implicit-decl warning on C99+ */
+extern long long now_ns(void);
 
+/* Iterative Fibonacci with same methodology as Tenge */
 int main(int argc, char **argv) {
     int n = (argc > 1) ? atoi(argv[1]) : 90;
+    int reps = (argc > 2) ? atoi(argv[2]) : 2000000;
+    
+    if (reps <= 0) { reps = 2000000; }
 
-    long long t0 = now_ns();
-
-    // Prevent trivial const-folding: keep values in 128-bit and branch on runtime n
-    volatile unsigned __int128 a = 0, b = 1;
-    for (int i = 0; i < n; i++) {
-        unsigned __int128 t = a + b;
+    // Warm-up
+    uint64_t a = 0, b = 1;
+    for (int i = 0; i < n; ++i) {
+        uint64_t t = a + b;
         a = b;
         b = t;
     }
 
-    long long t1 = now_ns();
-    printf("TASK=fib_iter,N=%d,TIME_NS=%lld\n", n, (t1 - t0));
+    // Clean measurement - same as Tenge
+    volatile uint64_t sink = 0;  // volatile to prevent optimization
+    long long start = now_ns();
+    for (int r = 0; r < reps; r++) {
+        uint64_t a = 0, b = 1;
+        for (int i = 0; i < n; ++i) {
+            uint64_t t = a + b;
+            a = b;
+            b = t;
+        }
+        sink += b;  // accumulate result, don't just overwrite
+    }
+    long long end = now_ns();
+    
+    // Calculate average time per iteration (same as Tenge)
+    long long total_time = end - start;
+    long long avg_ns = total_time / (reps > 0 ? reps : 1);
+    
+    printf("TASK=fib_iter,N=%d,TIME_NS=%lld\n", n, avg_ns);
     return 0;
 }
+

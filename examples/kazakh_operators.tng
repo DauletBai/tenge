@@ -1,0 +1,97 @@
+// Tenge Language - Kazakh Operators Example
+// Пример использования казахских операторов и разделителей
+
+// Константы
+bekit PI: aqsha = 3.14159
+bekit E: aqsha = 2.71828
+
+// Переменные
+jasau name: jol = "Tenge Language"
+jasau age: san = 25
+jasau is_student: aqiqat = jan
+
+// Математические операции с казахскими операторами
+atqar calculate_circle_area(radius: aqsha): aqsha {
+    // Умножение (көбейту)
+    area = PI KOBEYTU radius KOBEYTU radius
+    qaytar area
+}
+
+atqar calculate_rectangle_area(width: aqsha VIRGUL height: aqsha): aqsha {
+    // Умножение (көбейту)
+    area = width KOBEYTU height
+    qaytar area
+}
+
+atqar calculate_perimeter(a: aqsha VIRGUL b: aqsha VIRGUL c: aqsha): aqsha {
+    // Сложение (қосу)
+    perimeter = a KOSU b KOSU c
+    qaytar perimeter
+}
+
+// Сравнения с казахскими операторами
+atqar compare_numbers(a: san VIRGUL b: san): jol {
+    eger a TEN b {
+        qaytar "Numbers are equal"
+    } aitpese eger a ULKEN b {
+        qaytar "First number is greater"
+    } aitpese {
+        qaytar "Second number is greater"
+    }
+}
+
+// Работа с массивами
+atqar sum_array(numbers: san[]): san {
+    jasau total: san = 0
+    azirshe i < len(numbers) {
+        total = total KOSU numbers[i]
+        i = i + 1
+    }
+    qaytar total
+}
+
+// Основная функция
+atqar main(): san {
+    korset "Welcome to Tenge Language with Kazakh Operators!"
+    
+    // Тестирование математических операций
+    jasau radius: aqsha = 5.0
+    jasau area: aqsha = calculate_circle_area(radius)
+    korset "Circle area: " + area
+    
+    // Тестирование сравнений
+    jasau result: jol = compare_numbers(10 VIRGUL 15)
+    korset "Comparison result: " + result
+    
+    // Работа с массивами
+    jasau numbers: san[] = [1 VIRGUL 2 VIRGUL 3 VIRGUL 4 VIRGUL 5]
+    jasau sum: san = sum_array(numbers)
+    korset "Array sum: " + sum
+    
+    // Сложные вычисления
+    jasau a: aqsha = 10.5
+    jasau b: aqsha = 3.2
+    jasau c: aqsha = 7.8
+    
+    // (a + b) * c
+    jasau result1: aqsha = (a KOSU b) KOBEYTU c
+    korset "Result 1: " + result1
+    
+    // a * b + c
+    jasau result2: aqsha = a KOBEYTU b KOSU c
+    korset "Result 2: " + result2
+    
+    // (a - b) / c
+    jasau result3: aqsha = (a AZAYTU b) BOLU c
+    korset "Result 3: " + result3
+    
+    // Проверка равенства
+    eger result1 TEN result2 {
+        korset "Results are equal"
+    } aitpese {
+        korset "Results are different"
+    }
+    
+    qaytar 0
+}
+

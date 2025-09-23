@@ -1,22 +1,25 @@
 // FILE: internal/aotminic/runtime/runtime.c
-
 #include "runtime.h"
 
-int get_n(int argc, char** argv, int default_n) {
-    if (argc > 1) {
-        return atoi(argv[1]);
-    }
-    return default_n;
+#if defined(__APPLE__)
+/* macOS / iOS: mach_absolute_time */
+#include <mach/mach_time.h>
+
+long long now_ns(void) {
+    static mach_timebase_info_data_t tb = {0, 0};
+    if (tb.denom == 0) mach_timebase_info(&tb);
+    uint64_t t = mach_absolute_time();
+    /* convert to ns */
+    return (long long)((t * tb.numer) / tb.denom);
 }
 
-int* create_array(int n) {
-    int* arr = (int*)malloc(n * sizeof(int));
-    if (arr == NULL) {
-        fprintf(stderr, "Failed to allocate memory\n");
-        exit(1);
-    }
-    for (int i = 0; i < n; i++) {
-        arr[i] = i + 1;
-    }
-    return arr;
+#else
+/* POSIX: clock_gettime(CLOCK_MONOTONIC) */
+#include <time.h>
+
+long long now_ns(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long long)ts.tv_sec * 1000000000LL + (long long)ts.tv_nsec;
 }
+#endif

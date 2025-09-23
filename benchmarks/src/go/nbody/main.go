@@ -1,6 +1,4 @@
 // FILE: benchmarks/src/go/nbody/main.go
-// Purpose: N-body benchmark (gravity, velocity-Verlet). Deterministic init and timing.
-
 package main
 
 import (

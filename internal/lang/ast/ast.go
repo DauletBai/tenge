@@ -52,6 +52,7 @@ type Identifier struct {
 	Token token.Token // The IDENT token
 	Value string
 }
+
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
@@ -60,6 +61,7 @@ func (i *Identifier) String() string       { return i.Value }
 type TypeNode struct {
 	Token token.Token // The type token (e.g., token.SAN)
 }
+
 func (tn *TypeNode) expressionNode()      {}
 func (tn *TypeNode) TokenLiteral() string { return tn.Token.Literal }
 func (tn *TypeNode) String() string       { return tn.Token.Literal }
@@ -71,35 +73,39 @@ type BekitStatement struct {
 	Type  *TypeNode
 	Value Expression
 }
+
 func (bs *BekitStatement) statementNode()       {}
 func (bs *BekitStatement) TokenLiteral() string { return bs.Token.Literal }
 func (bs *BekitStatement) String() string       { return "bekit statement" } // Placeholder
 
-// JasaStatement represents a variable declaration (`jasa`).
-type JasaStatement struct {
-	Token token.Token // The 'jasa' token
+// JasauStatement represents a variable declaration (`jasau`).
+type JasauStatement struct {
+	Token token.Token // The 'jasau' token
 	Name  *Identifier
 	Type  *TypeNode
 	Value Expression
 }
-func (js *JasaStatement) statementNode()       {}
-func (js *JasaStatement) TokenLiteral() string { return js.Token.Literal }
-func (js *JasaStatement) String() string       { return "jasa statement" } // Placeholder
 
-// QaıtarStatement represents a return statement (`qaıtar`).
-type QaıtarStatement struct {
-	Token       token.Token // The 'qaıtar' token
+func (js *JasauStatement) statementNode()       {}
+func (js *JasauStatement) TokenLiteral() string { return js.Token.Literal }
+func (js *JasauStatement) String() string       { return "jasau statement" } // Placeholder
+
+// QaytarStatement represents a return statement (`qaytar`).
+type QaytarStatement struct {
+	Token       token.Token // The 'qaytar' token
 	ReturnValue Expression
 }
-func (qs *QaıtarStatement) statementNode()       {}
-func (qs *QaıtarStatement) TokenLiteral() string { return qs.Token.Literal }
-func (qs *QaıtarStatement) String() string       { return "qaıtar statement" } // Placeholder
+
+func (qs *QaytarStatement) statementNode()       {}
+func (qs *QaytarStatement) TokenLiteral() string { return qs.Token.Literal }
+func (qs *QaytarStatement) String() string       { return "qaytar statement" } // Placeholder
 
 // ExpressionStatement is a statement that consists of a single expression.
 type ExpressionStatement struct {
 	Token      token.Token
 	Expression Expression
 }
+
 func (es *ExpressionStatement) statementNode()       {}
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 func (es *ExpressionStatement) String() string {
@@ -116,6 +122,7 @@ type SanLiteral struct {
 	Token token.Token
 	Value int64
 }
+
 func (sl *SanLiteral) expressionNode()      {}
 func (sl *SanLiteral) TokenLiteral() string { return sl.Token.Literal }
 func (sl *SanLiteral) String() string       { return sl.Token.Literal }
@@ -125,6 +132,7 @@ type AqshaLiteral struct {
 	Token token.Token
 	Value decimal.Decimal
 }
+
 func (al *AqshaLiteral) expressionNode()      {}
 func (al *AqshaLiteral) TokenLiteral() string { return al.Token.Literal }
 func (al *AqshaLiteral) String() string       { return al.Token.Literal }
@@ -134,6 +142,7 @@ type AqıqatLiteral struct {
 	Token token.Token
 	Value bool
 }
+
 func (al *AqıqatLiteral) expressionNode()      {}
 func (al *AqıqatLiteral) TokenLiteral() string { return al.Token.Literal }
 func (al *AqıqatLiteral) String() string       { return al.Token.Literal }

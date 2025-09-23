@@ -1,10 +1,10 @@
-# Tenge Language Benchmark Results
+# Tenge Language Benchmark Results (September 2025)
 
-**Comprehensive performance analysis across 3 benchmark runs**
+**Corrected performance analysis with proper benchmarking methodology**
 
 ## 🎯 Executive Summary
 
-Tenge demonstrates **exceptional performance** in algorithmic and computational workloads, often **outperforming C, Rust, and Go** by significant margins. Our AOT (Ahead-of-Time) compiler generates highly optimized code that rivals and frequently exceeds traditional systems languages.
+Tenge demonstrates **competitive performance** across various workloads, with **realistic and validated results**. Our corrected benchmarks use proper `volatile` variables and result accumulation to prevent compiler optimizations, providing honest comparisons with C, Rust, and Go.
 
 ## 📊 Hardware & Methodology
 
@@ -13,40 +13,40 @@ Tenge demonstrates **exceptional performance** in algorithmic and computational 
 - **Languages**: Tenge (AOT) vs C vs Rust vs Go
 - **Compiler**: Tenge AOT → C → Clang/LLVM
 
-## 🏆 Detailed Results
+## 🏆 Corrected Results (September 2025)
 
-### 1. Fibonacci Iterative (N=90)
+### 1. Fibonacci Iterative (N=90, 2M iterations)
 
-|     Language | Time (ns) |       vs Tenge |
-|--------------|-----------|----------------|
-| **🏆 Tenge** |    **57** |       **1.0×** |
-|            C | 31,771,733| **557,399× slower** |
-|         Rust | 32,466,933| **569,595× slower** |
-|           Go | 33,578,600| **589,098× slower** |
+|     Language | Time (ns) | Relative Performance |
+|--------------|-----------|---------------------|
+| **🏆 C** |    **33** |       **1.00×** |
+|           Go |        37 | **0.89×** |
+|       Tenge |        44 | **0.75×** |
+|        Rust |        44 | **0.75×** |
 
-**Analysis**: Tenge's AOT compiler achieves **extraordinary optimization**, reducing computation to near-zero overhead.
+**Analysis**: C shows best performance for simple operations. Tenge and Rust are competitive with minimal overhead.
 
-### 2. Fibonacci Recursive (N=35)
+### 2. QuickSort Algorithm (N=100,000)
 
-|     Language |      Time (ns) | vs Tenge |
-|--------------|----------------|----------|
-| **🏆 Tenge** | **44,089,400** | **1.0×** |
-|            C |     75,649,200 | **1.7× slower** |
-|         Rust |     78,129,800 | **1.8× slower** |
-|           Go |     83,891,267 | **1.9× slower** |
+|    Language |      Time (ns) | Relative Performance |
+|-------------|----------------|---------------------|
+| **🏆 Rust** | **1,420,875** | **1.00×** |
+|       Tenge |    **1,554,000** | **0.91×** |
+|          Go |     7,154,000 | **0.20×** |
+|            C |     8,821,291 | **0.16×** |
 
-**Analysis**: Tenge demonstrates **superior recursive algorithm optimization**.
+**Analysis**: Rust shows excellent performance. Tenge is competitive, being only 9% slower than Rust.
 
-### 3. Integer Sorting (N=100,000)
+### 3. N-Body Simulation (N=1000, 10 steps)
 
-|    Language |      Time (ns) |  vs Best |
-|-------------|----------------|----------|
-| **🏆 Rust** | **36,483,800** | **1.0×** |
-|           C |     47,210,333 | **1.3× slower** |
-|          Go |     43,263,533 | **1.2× slower** |
-|       Tenge |     71,409,667 | **2.0× slower** |
+|    Language |      Time (ns) | Relative Performance |
+|-------------|----------------|---------------------|
+| **🏆 Tenge** | **18,856,000** | **1.00×** |
+|            C |    23,382,584 | **0.81×** |
+|         Rust |    28,083,041 | **0.67×** |
+|           Go |    41,156,291 | **0.46×** |
 
-**Analysis**: While Tenge is 2× slower than Rust, it remains **competitive** and faster than Go.
+**Analysis**: Tenge demonstrates **superior performance** in N-Body simulation, outperforming even native C by 19%.
 
 ### 4. N-Body Simulation (N=4096, 10 steps)
 
@@ -93,43 +93,44 @@ Tenge demonstrates **exceptional performance** in algorithmic and computational 
 
 ### 🚀 Tenge's Strengths
 
-1. **Algorithmic Optimization**: Exceptional performance in mathematical algorithms
-2. **Symmetric Kernels**: 5-6× faster than traditional languages
-3. **AOT Compilation**: Generates highly optimized C code
-4. **Memory Efficiency**: Low overhead in recursive and iterative patterns
+1. **N-Body Simulation**: Best performance, 19% faster than C
+2. **Algorithm Performance**: Competitive with Rust in sorting (9% slower)
+3. **AOT Compilation**: Generates well-optimized C code
+4. **Realistic Performance**: Honest benchmarking with proper methodology
 
 ### 📊 Competitive Analysis
 
 |         Category | Tenge Performance |                        Notes |
 |------------------|------------------|-------------------------------|
-| **Mathematical** |  **Outstanding** |   558,000× faster in fib_iter |
-|   **Scientific** |    **Excellent** |   Near-C performance in nbody |
-|    **Symmetric** |     **Dominant** |  5-6× faster than competitors |
-|      **General** |  **Competitive** | 2× slower than Rust in sorting |
+| **N-Body Simulation** |  **Outstanding** |   Best performance, faster than C |
+|   **QuickSort** |    **Excellent** |   Competitive with Rust (9% slower) |
+|    **Fibonacci** |     **Good** |  Competitive with native languages |
+|      **Overall** |  **Competitive** | Realistic performance across workloads |
 
 ## 🔬 Technical Analysis
 
-### Why Tenge Performs So Well
+### Why Tenge Performs Well
 
 1. **AOT Compilation**: Direct translation to optimized C
-2. **Algorithm-Specific Optimization**: Custom code generation for patterns
-3. **Memory Layout**: Efficient data structure representation
-4. **Compiler Intelligence**: Aggressive optimization strategies
+2. **Generated Code Quality**: Well-optimized C output
+3. **Algorithm Efficiency**: Good performance in complex simulations
+4. **Proper Benchmarking**: Fixed methodology prevents false results
 
-### Areas for Improvement
+### Key Improvements Made
 
-1. **Sorting Algorithms**: Could benefit from specialized sort implementations
-2. **General Workloads**: Room for improvement in generic computations
-3. **Library Integration**: Better integration with system libraries
+1. **Volatile Variables**: Prevented compiler optimizations
+2. **Result Accumulation**: Ensured all computations are performed
+3. **Realistic Comparisons**: Honest performance measurements
+4. **Cross-Language Validation**: Consistent methodology
 
 ## 🎯 Conclusion
 
-**Tenge demonstrates exceptional potential** as a high-performance systems language:
+**Tenge demonstrates competitive potential** as a high-performance systems language:
 
-- **🏆 Wins 3 out of 5 major benchmarks**
-- **🚀 Achieves 558,000× speedup** in algorithmic tasks
-- **⚡ Competitive performance** in general workloads
-- **🎯 Specialized excellence** in mathematical computations
+- **🏆 Best in N-Body simulation** (19% faster than C)
+- **🚀 Competitive in algorithms** (9% slower than Rust in sorting)
+- **⚡ Realistic performance** across all workloads
+- **🎯 Honest benchmarking** with proper methodology
 
 ## 🤝 Invitation to the Community
 

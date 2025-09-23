@@ -1,36 +1,41 @@
+// Fixed version with same methodology as Tenge
 use std::env;
 use std::time::Instant;
 
-fn fib_iter(n: u64) -> u64 {
-    if n < 2 {
-        return n;
-    }
-    let mut a = 0;
-    let mut b = 1;
-    for _ in 2..=n {
-        let temp = a + b;
-        a = b;
-        b = temp;
-    }
-    b
-}
-
 fn main() {
     let args: Vec<String> = env::args().collect();
-    let n: u64 = if args.len() > 1 {
-        args[1].parse().unwrap_or(90)
-    } else {
-        90
-    };
+    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(90);
+    let reps: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2000000);
+    
+    let reps = if reps <= 0 { 2000000 } else { reps };
 
     // Warm-up
-    fib_iter(10);
+    let mut a: u64 = 0;
+    let mut b: u64 = 1;
+    for _i in 0..n {
+        let t = a + b;
+        a = b;
+        b = t;
+    }
 
+    // Clean measurement - same as Tenge
+    let mut sink: u64 = 0;  // accumulate result to prevent optimization
     let start = Instant::now();
-    let result = fib_iter(n);
-    let duration = start.elapsed();
-
-    // CORRECTED: Output format now matches the unified runtime
-    println!("TASK=fib_iter_rs,N={},TIME_NS={}", n, duration.as_nanos());
-    eprintln!("Result: {}", result);
+    for _r in 0..reps {
+        let mut a: u64 = 0;
+        let mut b: u64 = 1;
+        for _i in 0..n {
+            let t = a + b;
+            a = b;
+            b = t;
+        }
+        sink += b;  // accumulate result, don't just discard
+    }
+    let end = Instant::now();
+    
+    // Calculate average time per iteration (same as Tenge)
+    let total_time = end.duration_since(start);
+    let avg_ns = total_time.as_nanos() / reps as u128;
+    
+    println!("TASK=fib_iter,N={},TIME_NS={},SINK={}", n, avg_ns, sink);
 }
