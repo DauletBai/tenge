@@ -3,7 +3,7 @@
 **A high-performance systems programming language inspired by agglutinative linguistics**
 
 <p align="center">
-  <img src="[https://github.com/DauletBai/tenge/blob/main/docs/philosophy/brand/logo.svg" alt="Tenge Logo" width="64"/>
+  <img src="docs/philosophy/brand/logo.svg" alt="Tenge Logo" width="64"/>
 </p>
 
 ## 🎯 Mission
