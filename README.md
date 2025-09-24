@@ -2,6 +2,10 @@
 
 **A high-performance systems programming language inspired by agglutinative linguistics**
 
+<p align="center">
+  <img src="[https://github.com/DauletBai/tenge/blob/main/docs/philosophy/brand/logo.svg" alt="Tenge Logo" width="64"/>
+</p>
+
 ## 🎯 Mission
 
 Tenge is an experimental programming language that explores the hypothesis that **linguistic clarity can translate to computational efficiency**. Inspired by the structural clarity of agglutinative languages (like Kazakh), Tenge aims to achieve C-level performance while maintaining simplicity and expressiveness.
