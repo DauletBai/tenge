@@ -1,0 +1,41 @@
+name: Bench
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build & Run (REPS=3)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang make
+          make build || true
+          REPS=3 ./benchmarks/run.sh
+
+      - name: Upload CSVs
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: benchmarks/results/*.csv
+
+      - name: Upload Summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-summary
+          path: benchmarks/results/LATEST.md

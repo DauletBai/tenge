@@ -202,3 +202,4 @@ The optimization of Tenge demonstrates that:
 4. **AOT compilation can be highly effective** - When properly optimized, generated C code can outperform hand-written C
 
 **Tenge now represents a serious alternative to established systems languages for high-performance computing tasks.**
+
