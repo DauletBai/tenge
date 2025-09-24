@@ -1,4 +1,3 @@
-// FILE: benchmarks/src/go/fib_rec.go
 package main
 
 import (
@@ -8,28 +7,37 @@ import (
 	"time"
 )
 
-func fibRec(n int) int {
-	if n < 2 {
-		return n
+func fib(n int) uint64 {
+	if n <= 1 {
+		return uint64(n)
 	}
-	return fibRec(n-1) + fibRec(n-2)
+	return fib(n-1) + fib(n-2)
 }
 
 func main() {
-	n := 34
+	n := 35
 	if len(os.Args) > 1 {
 		if v, err := strconv.Atoi(os.Args[1]); err == nil {
 			n = v
 		}
 	}
-
-	_ = fibRec(10) // Warm-up
+	batch := 0
+	if v := os.Getenv("BATCH_ITER"); v != "" {
+		if b, err := strconv.Atoi(v); err == nil {
+			batch = b
+		}
+	}
+	run := func() uint64 { return fib(n) }
 
 	start := time.Now()
-	result := fibRec(n)
-	elapsed := time.Since(start)
-
-	// Output format matching the unified runtime
-	fmt.Printf("TASK=fib_rec_go,N=%d,TIME_NS=%d\n", n, elapsed.Nanoseconds())
-	fmt.Fprintf(os.Stderr, "Result: %d\n", result) // Prevent optimization
+	iters := 1
+	if batch > 0 {
+		iters = batch
+	}
+	var acc uint64
+	for i := 0; i < iters; i++ {
+		acc ^= run()
+	}
+	elapsed := time.Since(start).Nanoseconds()
+	fmt.Printf("TASK=fib_rec,N=%d,TIME_NS=%d,ACC=%d\n", n, elapsed, acc)
 }

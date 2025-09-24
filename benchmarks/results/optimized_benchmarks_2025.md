@@ -152,3 +152,4 @@ This represents a **19% improvement over C** and **24% improvement over Rust** c
 4. **Optimize other algorithms** in the benchmark suite
 
 **Tenge is now a serious contender in high-performance computing!** 🚀
+

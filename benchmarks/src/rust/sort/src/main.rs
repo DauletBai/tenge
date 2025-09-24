@@ -1,44 +1,40 @@
 use std::env;
 use std::time::Instant;
 
-fn quicksort<T: Ord>(arr: &mut [T]) {
-    if arr.len() <= 1 {
-        return;
-    }
-    let pivot_index = arr.len() / 2;
-    arr.swap(0, pivot_index);
-    let mut i = 1;
-    for j in 1..arr.len() {
-        if arr[j] < arr[0] {
-            arr.swap(i, j);
-            i += 1;
+fn main() {
+    let mut n: usize = 100000;
+    if let Some(arg1) = env::args().nth(1) {
+        if let Ok(v) = arg1.parse::<usize>() {
+            n = v;
         }
     }
-    arr.swap(0, i - 1);
-    quicksort(&mut arr[0..i - 1]);
-    quicksort(&mut arr[i..]);
-}
+    let batch: usize = env::var("BATCH_ITER").ok().and_then(|v| v.parse().ok()).unwrap_or(0);
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let n: usize = if args.len() > 1 {
-        args[1].parse().unwrap_or(100)
-    } else {
-        100
+    let run = || -> u64 {
+        // детерминированный псевдослучайный массив
+        let mut x: u64 = 88172645463393265;
+        let mut v = vec![0u64; n];
+        for i in 0..n {
+            // xorshift64*
+            x ^= x >> 12; x ^= x << 25; x ^= x >> 27;
+            let val = x.wrapping_mul(2685821657736338717);
+            v[i] = val;
+        }
+        v.sort_unstable();
+        // checksum
+        let mut acc: u64 = 0;
+        for i in (0..n).step_by(n/16.max(1)) {
+            acc ^= v[i];
+        }
+        acc
     };
 
-    let mut numbers: Vec<i64> = (1..=n as i64).collect();
-    
-    // Warm-up run
-    let mut warm_up_numbers = numbers.clone();
-    quicksort(&mut warm_up_numbers);
-
-    let start = Instant::now();
-    quicksort(&mut numbers);
-    let duration = start.elapsed();
-
-    // CORRECTED: Output format now matches the unified runtime
-    println!("TASK=sort_rs,N={},TIME_NS={}", n, duration.as_nanos());
-    // Print result to stderr to prevent compiler from optimizing it away
-    eprintln!("Result (last element): {}", numbers[n - 1]);
+    let iters = if batch > 0 { batch } else { 1 };
+    let t0 = Instant::now();
+    let mut acc_total: u64 = 0;
+    for _ in 0..iters {
+        acc_total ^= run();
+    }
+    let ns = t0.elapsed().as_nanos() as u64;
+    println!("TASK=sort,N={},TIME_NS={},ACC={}", n, ns, acc_total);
 }

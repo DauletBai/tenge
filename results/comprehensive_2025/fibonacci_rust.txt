@@ -1,0 +1,5 @@
+ERROR: Rust Fibonacci failed on run 1
+ERROR: Rust Fibonacci failed on run 2
+ERROR: Rust Fibonacci failed on run 3
+ERROR: Rust Fibonacci failed on run 4
+ERROR: Rust Fibonacci failed on run 5

@@ -216,3 +216,4 @@ Tenge Source → Archetype Recognition → Optimization Selection → C Code Gen
 | **Portfolio** | - | **6.0 μs** | - | **Memory optimized** | **Cache optimized** |
 
 **Tenge now represents the cutting edge of AOT compilation technology!** 🚀
+
