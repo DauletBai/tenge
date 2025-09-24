@@ -3,8 +3,55 @@ SYSTEM_CONTEXT:
 - ALL new code comments MUST be written in English.
 - ALL new functions, classes, and methods MUST have JSDoc-style comments. For example:
 
-/**
- * @param {string} param1 - Description of the first parameter.
- * @param {number} param2 - Description of the second parameter.
- * @returns {boolean} Description of the return value.
- */
+# @param {string} param1 - Description of the first parameter.
+# @param {number} param2 - Description of the second parameter.
+# @returns {boolean} Description of the return value.
+
+project_mission: >
+  This repo implements the "Tenge" language and benchmarking suite (C/Rust/Go/Tenge AOT).
+  Goals: performance, correctness, reproducible benchmarks. No silent skips.
+
+general_principles:
+  - Be explicit: when a build step fails, stop and show the exact command + full error.
+  - Never invent results. Never write placeholder outputs into CSV.
+  - Maintain order in outputs: Tenge → C → Rust → Go.
+  - Use single timing source: now_ns() in C/AOT; std::time::Instant (Rust); time.Now().UnixNano() (Go).
+  - Always build with release/opt flags (-O3/-march=native for C; --release for Rust; -ldflags "-s -w" for Go).
+  - GOMAXPROCS=1 for fair single-thread comparisons.
+
+tasks:
+  - name: Build all
+    steps:
+      - run: make clean && make build
+      - check: |
+          Ensure all .bin/* exist for: sort_c, fib_iter_c, fib_rec_c, var_mc_c,
+          sort_rs, fib_iter_rs, fib_rec_rs, var_mc_rs,
+          sort_go, fib_iter_go?, fib_rec_go?, var_mc_go?,
+          tenge AOT: fib_cli, fib_rec_cli, var_mc_tng_{sort,zig,qsel}, nbody_tng, nbody_tng_sym.
+      - ifMissing: |
+          STOP with error. Do not continue to bench. Ask to open and fix failing target.
+
+  - name: Run suite
+    steps:
+      - run: REPS=5 NBODY_N=4096 NBODY_STEPS=10 NBODY_DT=0.001 ./benchmarks/run.sh
+      - verify: |
+          CSVs must contain all rows for Tenge/C/Rust/Go, no "0 ns" unless truly zero.
+          If some binary is missing → FAIL and fix Makefile or paths.
+
+bench_rules:
+  - No "Skipping (not found)" in final runs. Treat as error and fix.
+  - For ultra-fast tasks (e.g., fib_iter Tenge): measure in microseconds with batched loops and divide by reps; record nanoseconds.
+  - VaR: run sort / ziggurat / quickselect; record both latency and accuracy deltas vs analytic quantile.
+  - N-body: keep two variants (classic all-pairs + symmetric SoA); do not merge their numbers.
+
+files_to_open_first:
+  - Makefile
+  - benchmarks/run.sh
+  - benchmarks/src/tenge/*.tng
+  - benchmarks/src/c/*.{c,h}
+  - benchmarks/src/rust/**/Cargo.toml
+  - benchmarks/src/go/**.go
+
+style_and_quality:
+  - Prefer small, composable scripts over giant conditionals.
+  - Document any change in RESULTS.md.

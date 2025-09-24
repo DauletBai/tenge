@@ -1,0 +1,70 @@
+name: Bench
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch: {}
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+
+    env:
+      REPS: "1"
+      FIB_N: "90"
+      SIZE: "100000"
+      NBODY_N: "4096"
+      NBODY_STEPS: "10"
+      NBODY_DT: "0.001"
+      GOMAXPROCS: "1"
+      CFLAGS_NATIVE: "-O3"   # вместо -march=native на CI
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install build deps (clang, make)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang make
+
+      - name: Build
+        run: |
+          make clean && make build CFLAGS_NATIVE="$CFLAGS_NATIVE"
+          ls -lah .bin || true
+
+      - name: AOT demos (Tenge CLI sorts)
+        run: |
+          ./.bin/tenge -o .bin/sort_cli_qsort.c benchmarks/src/tenge/sort_qsort_cli.tng
+          ./.bin/tenge -o .bin/sort_cli_msort.c benchmarks/src/tenge/sort_msort_cli.tng
+          ./.bin/tenge -o .bin/sort_cli_pdq.c   benchmarks/src/tenge/sort_pdq_cli.tng
+          ./.bin/tenge -o .bin/sort_cli_radix.c benchmarks/src/tenge/sort_radix_cli.tng
+          cc -O3 -Iinternal/aotminic/runtime .bin/sort_cli_qsort.c internal/aotminic/runtime/runtime.c -o .bin/sort_cli_qsort
+          cc -O3 -Iinternal/aotminic/runtime .bin/sort_cli_msort.c internal/aotminic/runtime/runtime.c -o .bin/sort_cli_msort
+          cc -O3 -Iinternal/aotminic/runtime .bin/sort_cli_pdq.c   internal/aotminic/runtime/runtime.c -o .bin/sort_cli_pdq
+          cc -O3 -Iinternal/aotminic/runtime .bin/sort_cli_radix.c internal/aotminic/runtime/runtime.c -o .bin/sort_cli_radix
+
+      - name: Run quick benches
+        shell: bash
+        run: |
+          export REPS FIB_N SIZE NBODY_N NBODY_STEPS NBODY_DT GOMAXPROCS
+          bash ./benchmarks/run.sh
+          echo "---- Results ----"
+          ls -lah benchmarks/results || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-results
+          path: |
+            benchmarks/results/*.csv
+            benchmarks/results/LATEST.md
+          if-no-files-found: warn
