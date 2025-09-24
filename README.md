@@ -79,6 +79,35 @@ We welcome contributions from the international community! Areas of interest:
 - **Runtime Performance**: VM and JIT compiler development
 - **Benchmarks**: New test cases and performance improvements
 
+## Benchmarks (quick view) — 2025-09-24
+
+All benchmarks run on the same machine, single-process (Go with `GOMAXPROCS=1`), `-O3 -march=native` for C/Tenge, Rust `--release` (CPU-native).  
+Latest run: **2025-09-24**, REPS=5, sizes: **Sort N=100,000**, **fib_rec N=35**, **VaR N=1,000,000 (α=0.99, steps=1)**, **N-Body N=4096, steps=10**.
+
+> Note: Tenge `fib_iter` is too fast for single-shot ns timer; we will switch to micro-bench loops next run.  
+> Note: Tenge `sort_cli_*` binaries are currently not emitted by the AOT step; being re-enabled.
+
+### Results (avg wall time)
+
+| Benchmark | Tenge | C | Rust | Go |
+|---|---:|---:|---:|---:|
+| **Sort (100k)** | _n/a (AOT rebuild in progress)_ | 12.02 ms | 2.50 ms | 8.65 ms |
+| **fib_iter (N=90)** | 0 ns* | 0 ns* | _n/a_ | 0 ns* |
+| **fib_rec (N=35)** | 44.10 ms | 42.92 ms | 43.15 ms | 49.96 ms |
+| **VaR Monte Carlo — sort** | **183.41 ms** | 207.43 ms | 94.55 ms | 192.84 ms |
+| **VaR Monte Carlo — ziggurat** | **32.29 ms†** | — | — | — |
+| **VaR Monte Carlo — qselect** | **34.09 ms†** | — | — | — |
+| **N-Body (4096×10)** | **210.93 ms** | 555.85 ms | 595.60 ms | 1147.95 ms |
+| **N-Body (sym)** | **188.08 ms** | 635.67 ms | 627.07 ms | 655.25 ms |
+
+\* too short for single-shot nanosecond timing; will use micro-bench aggregation.  
+† exceptionally fast; we will re-validate workload equivalence and DCE-resistance (no early-exit, identical number of ops, result consumption).
+
+### Notes
+- Tenge keeps up with C/Rust on `fib_rec`, clearly beats C/Go on `VaR(sort)` and is **way ahead** on both N-Body kernels.  
+- The `ziggurat`/`qselect` VaR variants are under verification for identical arithmetic workload.
+- Next steps: re-enable Tenge `sort_cli_*` AOT, introduce micro-bench loops for `fib_iter`, add accuracy checks (quantiles/energy error) to the runner.
+
 ## 📚 Documentation
 
 - [Philosophy & Design](docs/philosophy/README.md)

@@ -145,4 +145,43 @@ We invite the international programming community to:
 
 ---
 
+# Benchmark Results — 2025-09-24
+
+Environment:
+- Single process; Go with `GOMAXPROCS=1`
+- C/Tenge: `-O3 -march=native` (same runtime lib)
+- Rust: `--release` with target CPU native
+- REPS=5 averages
+
+## Summary Table
+
+| Benchmark | Tenge | C | Rust | Go |
+|---|---:|---:|---:|---:|
+| Sort (100k) | _n/a_ | 12.02 ms | 2.50 ms | 8.65 ms |
+| fib_iter (N=90) | 0 ns* | 0 ns* | _n/a_ | 0 ns* |
+| fib_rec (N=35) | 44.10 ms | 42.92 ms | 43.15 ms | 49.96 ms |
+| VaR MC — sort (N=1e6, α=0.99, steps=1) | **183.41 ms** | 207.43 ms | 94.55 ms | 192.84 ms |
+| VaR MC — ziggurat | **32.29 ms†** | — | — | — |
+| VaR MC — qselect | **34.09 ms†** | — | — | — |
+| N-Body (4096×10) | **210.93 ms** | 555.85 ms | 595.60 ms | 1147.95 ms |
+| N-Body (4096×10, symmetric) | **188.08 ms** | 635.67 ms | 627.07 ms | 655.25 ms |
+
+\* too fast for single-shot ns timer; will use micro-bench loop.  
+† under verification for identical arithmetic/accuracy.
+
+## Raw CSV
+- `benchmarks/results/suite_20250924_103857.csv`
+- `benchmarks/results/var_acc_20250924_103857.csv`
+
+## Methodology and Caveats
+- Same dataset sizes across languages; Tenge AOT → C → compiled with the same flags as C reference.
+- Accuracy checks:
+  - VaR: comparing α-quantile across implementations. Next run will print quantile values and deltas.
+  - N-Body: next run will include energy error (ΔE/E) tracking to ensure physical parity.
+
+## Changelog (since previous run)
+- Restored AOT pipeline for VaR (sort/zig/qsel).
+- Stabilized N-Body (sym) and observed significant Tenge lead.
+- TODO: re-enable Tenge `sort_cli_*` AOT targets; add micro-bench loops for `fib_iter`.
+
 *Results generated on Apple MacBook Air M2, averaged across 3 benchmark runs with 5 repetitions each.*
