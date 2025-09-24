@@ -1,10 +1,10 @@
-# Tenge Language
-
-**A high-performance systems programming language inspired by agglutinative linguistics**
-
 <p align="center">
   <img src="docs/philosophy/brand/logo.svg" alt="Tenge Logo" width="64"/>
 </p>
+
+# Tenge Language
+
+**A high-performance systems programming language inspired by agglutinative linguistics**
 
 ## 🎯 Mission
 
