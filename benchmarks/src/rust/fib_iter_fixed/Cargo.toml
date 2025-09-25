@@ -1,8 +1,8 @@
 [package]
-name = "fib_iter"
+name = "fib_iter_fixed"
 version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "fib_iter"
+name = "fib_iter_fixed"
 path = "src/main.rs"

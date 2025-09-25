@@ -1,4 +1,4 @@
-# Latest Benchmark Summary (20250924_201351)
+# Latest Benchmark Summary (20250925_143448)
 
 - REPS: 5
 - SIZE (sort): 100000
@@ -6,8 +6,8 @@
 - NBODY: N=4096, steps=10, dt=0.001
 
 ## Results CSV
-- Suite: `benchmarks/results/suite_20250924_201351.csv`
-- VaR Accuracy: `benchmarks/results/var_acc_20250924_201351.csv`
+- Suite: `benchmarks/results/suite_20250925_143448.csv`
+- VaR Accuracy: `benchmarks/results/var_acc_20250925_143448.csv`
 
 ## Notes
 - Tenge sort demos are built via AOT only if missing.

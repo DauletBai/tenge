@@ -3,11 +3,6 @@
 
 use std::time::Instant;
 
-#[inline]
-fn now_ns() -> u128 {
-    Instant::now().elapsed().as_nanos() // overwritten below by precise measure
-}
-
 #[derive(Clone, Copy)]
 struct Rng(u64);
 impl Rng {
