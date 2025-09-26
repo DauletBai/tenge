@@ -1,0 +1,33 @@
+# build outputs
+/.bin/
+/bin/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Go: бинарники в исходных дерикториях бенчей
+/benchmarks/src/go/**/fft
+/benchmarks/src/go/**/fib_iter
+/benchmarks/src/go/**/fib_rec
+/benchmarks/src/go/**/garch
+/benchmarks/src/go/**/matrix_ops
+/benchmarks/src/go/**/nbody
+/benchmarks/src/go/**/nbody_sym
+/benchmarks/src/go/**/portfolio_opt
+/benchmarks/src/go/**/sort
+/benchmarks/src/go/**/var_mc
+/benchmarks/src/go/**/var_mc_acc
+/benchmarks/src/go/**/var_mc_acc_improved
+/benchmarks/src/go/**/yield_curve
+
+# Rust
+/benchmarks/src/rust/**/target/
+
+# Results (если хочешь хранить только сводку — комментом объяснил ниже)
+# /benchmarks/results/*.csv
+# /benchmarks/results/LATEST.md
+
+# Editor/IDE
+.vscode/
+.idea/

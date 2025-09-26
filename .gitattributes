@@ -1,0 +1,44 @@
+# Text files with consistent line endings
+benchmarks/results/*.csv text eol=lf
+benchmarks/results/LATEST.md text eol=lf
+
+# Go files
+*.go text eol=lf
+
+# Rust files
+*.rs text eol=lf
+Cargo.toml text eol=lf
+
+# C files
+*.c text eol=lf
+*.h text eol=lf
+
+# Tenge files
+*.tng text eol=lf
+
+# Scripts
+*.sh text eol=lf
+*.py text eol=lf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# Binary files (should not be tracked)
+*.bin binary
+*.o binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# Images and assets
+*.svg text eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+
+# Brand assets (keep as is)
+docs/philosophy/brand/*.svg text eol=lf
