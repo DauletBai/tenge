@@ -151,7 +151,3 @@ Check our [benchmark results](RESULTS.md) and join our community to help shape t
 
 For benchmark results, plots and a live GitHub Pages site, see the companion repository:  
 👉 [tenge-showcase](https://github.com/DauletBai/tenge-showcase)
-## Showcase
-
-For benchmark results, plots and a live GitHub Pages site, see the companion repository:
-👉 [tenge-showcase](https://github.com/DauletBai/tenge-showcase)
