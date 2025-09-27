@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/philosophy/brand/logo.svg" alt="Tenge Logo" width="64"/>
+  <img src="docs/philosophy/brand/logo_64.svg" alt="Tenge Logo" width="64"/>
 </p>
 
 # Tenge Language
