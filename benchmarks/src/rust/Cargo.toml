@@ -1,0 +1,6 @@
+[workspace]
+members = ["sort","fib_iter","fib_rec","var_mc","nbody","nbody_sym"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"

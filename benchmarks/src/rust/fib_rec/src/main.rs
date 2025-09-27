@@ -23,7 +23,5 @@ fn main() {
     let result = fib_rec(n);
     let duration = start.elapsed();
 
-    // CORRECTED: Output format now matches the unified runtime
-    println!("TASK=fib_rec_rs,N={},TIME_NS={}", n, duration.as_nanos());
-    eprintln!("Result: {}", result);
+    println!("{}", duration.as_nanos());
 }

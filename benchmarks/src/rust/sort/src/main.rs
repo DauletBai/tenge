@@ -36,5 +36,5 @@ fn main() {
         acc_total ^= run();
     }
     let ns = t0.elapsed().as_nanos() as u64;
-    println!("TASK=sort,N={},TIME_NS={},ACC={}", n, ns, acc_total);
+    println!("{}", ns);
 }

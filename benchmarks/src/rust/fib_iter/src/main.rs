@@ -1,41 +1,47 @@
-// Fixed version with same methodology as Tenge
 use std::env;
-use std::time::Instant;
+use std::io::{self, Write};
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
-    let n: usize = args.get(1).and_then(|s| s.parse().ok()).unwrap_or(90);
-    let reps: usize = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2000000);
-    
-    let reps = if reps <= 0 { 2000000 } else { reps };
-
-    // Warm-up
-    let mut a: u64 = 0;
-    let mut b: u64 = 1;
-    for _i in 0..n {
-        let t = a + b;
+#[inline(never)]
+fn fib_iter(n: u64) -> u64 {
+    let (mut a, mut b) = (0u64, 1u64);
+    for _ in 0..n {
+        let t = a.wrapping_add(b);
         a = b;
         b = t;
     }
+    a
+}
 
-    // Clean measurement - same as Tenge
-    let mut sink: u64 = 0;  // accumulate result to prevent optimization
-    let start = Instant::now();
-    for _r in 0..reps {
-        let mut a: u64 = 0;
-        let mut b: u64 = 1;
-        for _i in 0..n {
-            let t = a + b;
-            a = b;
-            b = t;
+// Волатильный приёмник: не даём оптимизатору выкинуть работу
+static mut SINK_GLOBAL: u64 = 0;
+
+fn main() {
+    let mut n: u64 = 90;
+    if let Some(arg1) = env::args().nth(1) {
+        if let Ok(v) = arg1.parse::<u64>() {
+            n = v;
         }
-        sink += b;  // accumulate result, don't just discard
     }
-    let end = Instant::now();
-    
-    // Calculate average time per iteration (same as Tenge)
-    let total_time = end.duration_since(start);
-    let avg_ns = total_time.as_nanos() / reps as u128;
-    
-    println!("TASK=fib_iter,N={},TIME_NS={},SINK={}", n, avg_ns, sink);
+    let inner = env::var("INNER_REPS")
+        .ok()
+        .and_then(|s| s.parse::<u64>().ok())
+        .unwrap_or(0);
+
+    if inner == 0 {
+        let v = fib_iter(n);
+        unsafe { SINK_GLOBAL ^= v; }
+    } else {
+        let mut s: u64 = 0;
+        for _ in 0..inner {
+            s ^= fib_iter(n);
+        }
+        unsafe { SINK_GLOBAL ^= s; }
+    }
+
+    // Без вывода по умолчанию.
+    if env::var("PRINT_SINK").ok().as_deref() == Some("1") {
+        // печать вне критического участка
+        let v = unsafe { SINK_GLOBAL };
+        let _ = writeln!(io::stdout(), "{v}");
+    }
 }

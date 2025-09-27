@@ -1,41 +1,52 @@
-// Usage: fib_cli <N> <REPS>
-fn main() {
-  let n = argi(1);
-  let reps = argi(2);
-  if (reps <= 0) { reps = 2000000; }
+# CLI для итеративного Fibonacci.
+# Важно: никакого вывода в горячем участке. INNER_REPS читаем из env.
 
-  // Warm-up
-  let a = 0;
-  let b = 1;
-  let k = 0;
-  while (k < n) {
-    let tmp = a + b;
-    a = b;
-    b = tmp;
-    k = k + 1;
-  }
+import "std/cli"
+import "std/env"
 
-  // Clean measurement
-  let start = time_ns();
-  let i = 0;
-  let last = 0;
-  while (i < reps) {
-    let a = 0;
-    let b = 1;
-    let k = 0;
-    while (k < n) {
-      let tmp = a + b;
-      a = b;
-      b = tmp;
-      k = k + 1;
+func fib_iter(n: u64) -> u64 {
+    var a: u64 = 0
+    var b: u64 = 1
+    var i: u64 = 0
+    while i < n {
+        let t: u64 = a + b
+        a = b
+        b = t
+        i = i + 1
     }
-    last = a;
-    i = i + 1;
-  }
-  let end = time_ns();
+    return a
+}
 
-  // Output after measurement
-  print("Result: ");
-  print(last);
-  print_time_ns(end - start);   
+var sink_global: u64 = 0  # глобальный приёмник
+
+func main(args: []string) -> i32 {
+    var n: u64 = 90
+    if len(args) > 1 {
+        n = parse_u64(args[1])
+    }
+
+    let ir_env = getenv("INNER_REPS")
+    var inner: u64 = 0
+    if ir_env.ok {
+        inner = parse_u64(ir_env.val)
+    }
+
+    if inner == 0 {
+        sink_global = sink_global ^ fib_iter(n)
+    } else {
+        var s: u64 = 0
+        var i: u64 = 0
+        while i < inner {
+            s = s ^ fib_iter(n)
+            i = i + 1
+        }
+        sink_global = sink_global ^ s
+    }
+
+    # По умолчанию — без вывода.
+    let ps = getenv("PRINT_SINK")
+    if ps.ok && ps.val == "1" {
+        println_u64(sink_global)
+    }
+    return 0
 }

@@ -1,13 +1,12 @@
-# build roots
+# Build roots
 .bin/
-/.bin/
 /bin/
 benchmarks/.bin/
 
-# cargo targets
+# Cargo targets
 **/target/
 
-# generated C from AOT (we emit to .bin anyway)
+# Generated C from AOT (we emit to .bin anyway)
 *.o
 *.a
 *.so
@@ -18,7 +17,7 @@ benchmarks/.bin/
 .DS_Store
 Thumbs.db
 
-# compiled Go bins in source trees
+# Compiled Go bins in source trees
 benchmarks/src/go/*/*
 /benchmarks/src/go/**/fft
 /benchmarks/src/go/**/fib_iter
@@ -34,13 +33,18 @@ benchmarks/src/go/*/*
 /benchmarks/src/go/**/var_mc_acc_improved
 /benchmarks/src/go/**/yield_curve
 
-# Rust
+# Rust lockfiles (not needed for benchmarks)
+benchmarks/src/rust/**/Cargo.lock
+
+# Rust build artifacts
 /benchmarks/src/rust/**/target/
 
-# Results (если хочешь хранить только сводку — комментом объяснил ниже)
-# /benchmarks/results/*.csv
-# /benchmarks/results/LATEST.md
+# Benchmark results (store only LATEST.md if needed)
+benchmarks/results/*.csv
 
 # Editor/IDE
 .vscode/
 .idea/
+
+# Node/npm (in case of docs or web assets in future)
+node_modules/

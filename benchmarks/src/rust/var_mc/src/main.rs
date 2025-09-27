@@ -63,6 +63,6 @@ fn main() {
     let var = loss[n - 1 - (idx as usize)];
 
     let elapsed = start.elapsed();
-    let time_ns = (elapsed.as_secs() as u128) * 1_000_000_000u128 + (elapsed.subsec_nanos() as u128);
-    println!("TASK=var_mc,N={},TIME_NS={},VAR={:.6}", n, time_ns, var);
+    let time_ns = elapsed.as_nanos();
+    println!("{}", time_ns);
 }

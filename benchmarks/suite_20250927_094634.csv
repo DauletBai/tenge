@@ -1,0 +1,58 @@
+sort         tenge(qsort) tenge(qsort) avg=41521000 ns
+__CSV__:tenge(qsort):41521000
+sort         tenge(msort) tenge(msort) avg=43039000 ns
+__CSV__:tenge(msort):43039000
+sort         tenge(pdq)   tenge(pdq)   avg=39744000 ns
+__CSV__:tenge(pdq):39744000
+sort         tenge(radix) tenge(radix) avg=33297600 ns
+__CSV__:tenge(radix):33297600
+sort         c            c(-)         avg=42467600 ns
+__CSV__:c(-):42467600
+sort         rust         rust(-)      avg=36570800 ns
+__CSV__:rust(-):36570800
+sort         go           go(-)        avg=43597800 ns
+__CSV__:go(-):43597800
+fib_iter     tenge        tenge        avg=32992200 ns
+__CSV__:tenge:32992200
+fib_iter     c            c            avg=32100800 ns
+__CSV__:c:32100800
+fib_iter     rust         rust         avg=119405200 ns
+__CSV__:rust:119405200
+fib_iter     go           go           avg=33388000 ns
+__CSV__:go:33388000
+fib_rec      tenge        tenge        avg=64193400 ns
+__CSV__:tenge:64193400
+fib_rec      c            c            avg=65304000 ns
+__CSV__:c:65304000
+fib_rec      rust         rust         avg=64480600 ns
+__CSV__:rust:64480600
+fib_rec      go           go           avg=68227600 ns
+__CSV__:go:68227600
+var_mc       tenge(sort)  tenge(sort)  avg=158951600 ns
+__CSV__:tenge(sort):158951600
+var_mc       tenge(zig)   tenge(zig)   avg=57455400 ns
+__CSV__:tenge(zig):57455400
+var_mc       tenge(qsel)  tenge(qsel)  avg=60616000 ns
+__CSV__:tenge(qsel):60616000
+var_mc       c            c(-)         avg=184171600 ns
+__CSV__:c(-):184171600
+var_mc       rust         rust(-)      avg=101307600 ns
+__CSV__:rust(-):101307600
+var_mc       go           go(-)        avg=175411600 ns
+__CSV__:go(-):175411600
+nbody        tenge        tenge        avg=304268000 ns
+__CSV__:tenge:304268000
+nbody        c            c            avg=406239200 ns
+__CSV__:c:406239200
+nbody        rust         rust         avg=506982600 ns
+__CSV__:rust:506982600
+nbody        go           go           avg=925211600 ns
+__CSV__:go:925211600
+nbody_sym    tenge        tenge(sym)   avg=201552400 ns
+__CSV__:tenge(sym):201552400
+nbody_sym    c            c(sym)       avg=458817200 ns
+__CSV__:c(sym):458817200
+nbody_sym    rust         rust(sym)    avg=513707400 ns
+__CSV__:rust(sym):513707400
+nbody_sym    go           go(sym)      avg=556975600 ns
+__CSV__:go(sym):556975600

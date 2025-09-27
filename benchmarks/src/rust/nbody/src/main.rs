@@ -165,5 +165,5 @@ fn main() {
     }
     let e = ke + pe;
 
-    println!("TASK=nbody,N={},TIME_NS={},ENERGY={:.9}", n, dt_ns, e);
+    println!("{}", dt_ns);
 }
