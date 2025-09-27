@@ -1,124 +1,83 @@
-SHELL := /bin/bash
-.PHONY: all clean build c_benches go_benches rust_benches tenge_cli benches
+# Root Makefile for Tenge project
 
-BIN := .bin
-$(shell mkdir -p $(BIN))
-
-# Profiles
-PROFILE ?= strict
-CFLAGS_STRICT := -O3
-CFLAGS_FAST   := -O3 -ffast-math -funroll-loops
-CFLAGS := $(if $(filter $(PROFILE),fast),$(CFLAGS_FAST),$(CFLAGS_STRICT))
-
-RUSTFLAGS_STRICT :=
-RUSTFLAGS_FAST   := -C opt-level=3
-export RUSTFLAGS := $(if $(filter $(PROFILE),fast),$(RUSTFLAGS_FAST),$(RUSTFLAGS_STRICT))
-
-GO := go
+.PHONY: all clean build test bench plot publish help
 
 all: build
 
 clean:
-	rm -rf $(BIN)
-	mkdir -p $(BIN)
-	@echo "[clean] .bin removed and recreated."
+	rm -rf .bin
+	rm -rf benchmarks/results
+	rm -rf plots
+	rm -rf docs/index.html
 
-build: $(BIN)/tenge runtime.o c_benches go_benches rust_benches tenge_cli
-	@echo "[build] All targets built."
+build:
+	@echo "[build] all targets built"
+	$(MAKE) -C benchmarks build
 
-$(BIN)/tenge:
-	$(GO) build -o $(BIN)/tenge ./cmd/tenge
-	@echo "[build] compiler -> $(BIN)/tenge"
+test:
+	@echo "[test] running tests"
+	$(MAKE) -C benchmarks test
 
-runtime.o:
-	cc -O3 -c internal/aotminic/runtime/runtime.c -o $(BIN)/runtime.o
-	@echo "[build] runtime.o built"
+bench:
+	@echo "[bench] running benchmarks"
+	$(MAKE) -C benchmarks bench
 
-################# C benches ##################
-define CC_ONE
-cc $(CFLAGS) -Iinternal/aotminic/runtime benchmarks/src/c/$(1).c $(BIN)/runtime.o -o $(BIN)/$(2)
-	@echo "[build] $(BIN)/$(2)"
-endef
+plot:
+	@echo "[plot] generating plots"
+	$(MAKE) -C benchmarks plot
 
-c_benches:
-	$(call CC_ONE,fft,fft_c)
-	$(call CC_ONE,fib_iter,fib_iter_c)
-	$(call CC_ONE,fib_rec,fib_rec_c)
-	$(call CC_ONE,garch,garch_c)
-	$(call CC_ONE,matrix_ops,matrix_ops_c)
-	$(call CC_ONE,nbody_sym_crossplatform,nbody_sym_crossplatform_c)
-	$(call CC_ONE,nbody_sym,nbody_sym_c)
-	$(call CC_ONE,nbody,nbody_c)
-	$(call CC_ONE,portfolio_opt_agglutinative,portfolio_opt_agglutinative_c)
-	$(call CC_ONE,portfolio_opt,portfolio_opt_c)
-	$(call CC_ONE,sort_tenge,sort_tenge_c)
-	$(call CC_ONE,sort,sort_c)
-	$(call CC_ONE,var_mc_acc_improved,var_mc_acc_improved_c)
-	$(call CC_ONE,var_mc_acc_tenge,var_mc_acc_tenge_c)
-	$(call CC_ONE,var_mc_acc,var_mc_acc_c)
-	$(call CC_ONE,var_monte_carlo,var_monte_carlo_c)
-	$(call CC_ONE,yield_curve,yield_curve_c)
-	@echo "[build] C benches built"
+publish:
+	@echo "[publish] building index.html for GitHub Pages"
+	$(MAKE) -C benchmarks publish
 
-################# Go benches #################
-define GO_ONE
-	$(GO) build -o $(BIN)/$(2) ./benchmarks/src/go/$(1)
-	@echo "[build] $(BIN)/$(2)"
-endef
+help:
+	@echo "Available targets:"
+	@echo "  all       - build everything"
+	@echo "  clean     - clean all build outputs"
+	@echo "  build     - build project and benchmarks"
+	@echo "  test      - run tests"
+	@echo "  bench     - run benchmarks"
+	@echo "  plot      - generate plots"
+	@echo "  publish   - publish docs/index.html"
+	@echo "  crud-*    - run CRUD demo (C + SQLite)"
+	@echo "  crud-http - run CRUD HTTP demo"
 
-go_benches:
-	@echo "[build] Go benches…"
-	$(call GO_ONE,fft,fft)
-	$(call GO_ONE,fib_iter,fib_iter)
-	$(call GO_ONE,fib_rec,fib_rec)
-	$(call GO_ONE,garch,garch)
-	$(call GO_ONE,matrix_ops,matrix_ops)
-	$(call GO_ONE,nbody,nbody)
-	$(call GO_ONE,nbody_sym,nbody_sym)
-	$(call GO_ONE,portfolio_opt,portfolio_opt)
-	$(call GO_ONE,sort,sort)
-	$(call GO_ONE,var_mc,var_mc)
-	$(call GO_ONE,var_mc_acc,var_mc_acc)
-	$(call GO_ONE,var_mc_acc_improved,var_mc_acc_improved)
-	$(call GO_ONE,yield_curve,yield_curve)
-	@echo "[build] Go benches done (13 built)"
+# --- CRUD DEMO SHORTCUTS (C + SQLite) ---
+.PHONY: crud crud-init crud-add crud-list crud-get crud-done crud-rm crud-purge \
+        crud-http crud-http-run
 
-############### Rust benches #################
-define RUST_ONE
-	cd benchmarks/src/rust/$(1) && cargo build --release
-	cp benchmarks/src/rust/$(1)/target/release/$(2) $(BIN)/$(3)
-	@echo "[build] $(BIN)/$(3)"
-endef
+crud:
+	@$(MAKE) -C examples/crud_todos build
 
-rust_benches:
-	@echo "[build] Rust benches…"
-	$(call RUST_ONE,sort,sort,sort_rs)
-	$(call RUST_ONE,fib_iter,fib_iter,fib_iter_rs)
-	$(call RUST_ONE,fib_rec,fib_rec,fib_rec_rs)
-	$(call RUST_ONE,var_mc,var_mc,var_mc_rs)
-	$(call RUST_ONE,nbody,nbody,nbody_rs)
-	$(call RUST_ONE,nbody_sym,nbody_sym,nbody_rs_sym)
-	@echo "[build] Rust benches done"
+crud-init:
+	@$(MAKE) -C examples/crud_todos init
 
-############### Tenge AOT CLIs ################
-define TENGE_ONE
-	$(BIN)/tenge -o $(BIN)/$(1).c benchmarks/src/tenge/$(2).tng
-	cc $(CFLAGS) -Iinternal/aotminic/runtime $(BIN)/$(1).c internal/aotminic/runtime/runtime.c -o $(BIN)/$(1)
-	@echo "[build] $(BIN)/$(1)"
-endef
+crud-add:
+	@if [ -z "$$title" ] || [ -z "$$priority" ]; then \
+	  echo "Usage: make crud-add title='Buy milk' priority=1"; exit 1; \
+	fi
+	@TITLE="$$title" PRIORITY="$$priority" $(MAKE) -C examples/crud_todos add
 
-tenge_cli:
-	$(call TENGE_ONE,sort_cli_qsort,sort_qsort_cli)
-	$(call TENGE_ONE,sort_cli_msort,sort_msort_cli)
-	$(call TENGE_ONE,sort_cli_pdq,sort_pdq_cli)
-	$(call TENGE_ONE,sort_cli_radix,sort_radix_cli)
-	$(call TENGE_ONE,var_mc_tng_sort,var_mc_sort_cli)
-	$(call TENGE_ONE,var_mc_tng_zig,var_mc_zig_cli)
-	$(call TENGE_ONE,var_mc_tng_qsel,var_mc_qsel_cli)
-	$(call TENGE_ONE,fib_cli,fib_iter_cli)
-	$(call TENGE_ONE,fib_rec_cli,fib_rec_cli)
-	$(call TENGE_ONE,nbody_tng,nbody_cli)
-	$(call TENGE_ONE,nbody_tng_sym,nbody_sym_cli)
+crud-list:
+	@$(MAKE) -C examples/crud_todos list
 
-benches: build
-	./benchmarks/run.sh
+crud-get:
+	@if [ -z "$$id" ]; then echo "Usage: make crud-get id=1"; exit 1; fi
+	@ID="$$id" $(MAKE) -C examples/crud_todos get
+
+crud-done:
+	@if [ -z "$$id" ]; then echo "Usage: make crud-done id=1"; exit 1; fi
+	@ID="$$id" $(MAKE) -C examples/crud_todos done
+
+crud-rm:
+	@if [ -z "$$id" ]; then echo "Usage: make crud-rm id=1"; exit 1; fi
+	@ID="$$id" $(MAKE) -C examples/crud_todos rm
+
+crud-purge:
+	@$(MAKE) -C examples/crud_todos purge
+
+crud-http:
+	@$(MAKE) -C examples/crud_todos http
+
+crud-http-run:
+	@$(MAKE) -C examples/crud_todos http-run
