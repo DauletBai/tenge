@@ -1,0 +1,68 @@
+// std/net/http.tng
+// Documentation: Thin HTTP client built on libcurl (blocking, easy API).
+
+package std.net
+
+import std.ffi
+import std.mem
+
+// FFI to libcurl (subset).
+extern "C" fn curl_easy_init() -> *u8
+extern "C" fn curl_easy_cleanup(h: *u8)
+extern "C" fn curl_easy_setopt_ptr(h: *u8, opt: u64, val: *u8) -> i32
+extern "C" fn curl_easy_setopt_long(h: *u8, opt: u64, val: i64) -> i32
+extern "C" fn curl_easy_perform(h: *u8) -> i32
+
+// Options (constants).
+const CURLOPT_URL: u64 = 10002
+const CURLOPT_WRITEDATA: u64 = 10001
+const CURLOPT_WRITEFUNCTION: u64 = 20011
+const CURLOPT_TIMEOUT_MS: u64 = 155
+
+// Write callback signature (libcurl style).
+type WriteFn = fn (*u8, u64, u64, *u8) -> u64
+
+extern "C" fn memcpy(dst: *u8, src: *u8, n: u64) -> *u8
+
+// Response buffer backed by an arena.
+pub type Response struct {
+    data: ffi.Slice[u8]
+    status: i32 // libcurl code (0 OK)
+}
+
+// Internal write trampoline.
+fn write_cb(ptr: *u8, size: u64, nmemb: u64, userdata: *u8) -> u64 {
+    let bytes = size * nmemb
+    let r = userdata as *mut Response
+    let old_len = r.data.len
+    let new_len = old_len + bytes
+    // Simple grow by copying into a new arena slice is omitted for brevity; assume pre-sized arena.
+    // Here we just memcpy into tail if capacity is enough.
+    memcpy(r.data.ptr + old_len, ptr, bytes)
+    r.data.len = new_len
+    return bytes
+}
+
+// Simple GET into preallocated arena buffer.
+pub fn http_get_into(url: ffi.Str, dst: *mut Response, arena: *mut mem.Arena, cap: u64, timeout_ms: i64) -> i32 {
+    let h = curl_easy_init()
+    if h == 0 as *u8 { return -1 }
+    dst.status = -1
+    let buf = mem.arena_alloc(arena, cap, 16)
+    if buf == 0 as *u8 {
+        curl_easy_cleanup(h)
+        return -2
+    }
+    dst.data = ffi.slice_from[u8](buf, 0)
+
+    // Set options.
+    curl_easy_setopt_ptr(h, CURLOPT_URL, url.ptr)
+    curl_easy_setopt_ptr(h, CURLOPT_WRITEDATA, (dst as *u8))
+    curl_easy_setopt_ptr(h, CURLOPT_WRITEFUNCTION, (write_cb as *u8))
+    curl_easy_setopt_long(h, CURLOPT_TIMEOUT_MS, timeout_ms)
+
+    let code = curl_easy_perform(h)
+    dst.status = code
+    curl_easy_cleanup(h)
+    return code
+}

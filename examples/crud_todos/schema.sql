@@ -1,0 +1,6 @@
+-- Minimal schema for TODO items
+CREATE TABLE IF NOT EXISTS todos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  done INTEGER NOT NULL DEFAULT 0
+);

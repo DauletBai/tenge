@@ -1,0 +1,28 @@
+// std/ffi.tng
+// Documentation: Minimal FFI declarations and helper types for C interop.
+
+package std.ffi
+
+// Slice and String interop types.
+pub type Slice[T] struct {
+    ptr: *T
+    len: u64
+}
+
+pub type Str struct {
+    ptr: *u8
+    len: u64
+}
+
+// Result code alias.
+pub type CInt = i32
+
+// Helpers to build Str from &u8 and length (no null terminator).
+pub fn str_from(ptr: *u8, len: u64) -> Str {
+    return Str{ ptr: ptr, len: len }
+}
+
+// Helpers to build Slice[T].
+pub fn slice_from[T](ptr: *T, len: u64) -> Slice[T] {
+    return Slice[T]{ ptr: ptr, len: len }
+}

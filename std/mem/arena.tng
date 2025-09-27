@@ -1,0 +1,38 @@
+// std/mem/arena.tng
+// Documentation: Simple bump arena for predictable allocations.
+
+package std.mem
+
+pub type Arena struct {
+    base: *u8
+    size: u64
+    used: u64
+}
+
+extern "C" fn malloc(sz: u64) -> *u8
+extern "C" fn free(p: *u8)
+
+pub fn arena_new(cap: u64) -> Arena {
+    let b = malloc(cap)
+    return Arena{ base: b, size: cap, used: 0 }
+}
+
+pub fn arena_reset(a: *mut Arena) {
+    a.used = 0
+}
+
+pub fn arena_alloc(a: *mut Arena, sz: u64, align: u64) -> *u8 {
+    let mask = align - 1
+    let off = (a.used + mask) & ~mask
+    let end = off + sz
+    if end > a.size { return 0 as *u8 }
+    a.used = end
+    return a.base + off
+}
+
+pub fn arena_free(a: *mut Arena) {
+    free(a.base)
+    a.base = 0 as *u8
+    a.size = 0
+    a.used = 0
+}

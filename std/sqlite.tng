@@ -1,0 +1,74 @@
+// std/sqlite.tng
+// Documentation: Thin SQLite wrapper (prepared statements, step/fetch, exec).
+
+package std.sqlite
+
+import std.ffi
+import std.mem
+
+// FFI to sqlite3 (subset).
+extern "C" fn sqlite3_open(filename: *u8, db: *mut *u8) -> i32
+extern "C" fn sqlite3_close(db: *u8) -> i32
+extern "C" fn sqlite3_exec(db: *u8, sql: *u8, cb: *u8, arg: *u8, err: *mut *u8) -> i32
+extern "C" fn sqlite3_prepare_v2(db: *u8, sql: *u8, n: i32, stmt: *mut *u8, tail: *mut *u8) -> i32
+extern "C" fn sqlite3_step(stmt: *u8) -> i32
+extern "C" fn sqlite3_finalize(stmt: *u8) -> i32
+extern "C" fn sqlite3_bind_text(stmt: *u8, idx: i32, val: *u8, n: i32, dtor: *u8) -> i32
+extern "C" fn sqlite3_bind_int64(stmt: *u8, idx: i32, v: i64) -> i32
+extern "C" fn sqlite3_column_count(stmt: *u8) -> i32
+extern "C" fn sqlite3_column_type(stmt: *u8, i: i32) -> i32
+extern "C" fn sqlite3_column_text(stmt: *u8, i: i32) -> *u8
+extern "C" fn sqlite3_column_int64(stmt: *u8, i: i32) -> i64
+
+const SQLITE_OK: i32 = 0
+const SQLITE_ROW: i32 = 100
+const SQLITE_DONE: i32 = 101
+
+pub type DB struct { raw: *u8 }
+pub type Stmt struct { raw: *u8 }
+
+pub fn open(path: ffi.Str, out: *mut DB) -> i32 {
+    let p: *mut *u8 = 0 as *mut *u8
+    let rc = sqlite3_open(path.ptr, p)
+    if rc != SQLITE_OK { return rc }
+    out.raw = *p
+    return rc
+}
+
+pub fn close(db: *mut DB) -> i32 {
+    let rc = sqlite3_close(db.raw)
+    db.raw = 0 as *u8
+    return rc
+}
+
+pub fn exec(db: *DB, sql: ffi.Str) -> i32 {
+    return sqlite3_exec(db.raw, sql.ptr, 0 as *u8, 0 as *u8, 0 as *mut *u8)
+}
+
+pub fn prepare(db: *DB, sql: ffi.Str, out: *mut Stmt) -> i32 {
+    let p: *mut *u8 = 0 as *mut *u8
+    let rc = sqlite3_prepare_v2(db.raw, sql.ptr, -1, p, 0 as *mut *u8)
+    if rc != SQLITE_OK { return rc }
+    out.raw = *p
+    return rc
+}
+
+pub fn finalize(s: *mut Stmt) -> i32 {
+    let rc = sqlite3_finalize(s.raw)
+    s.raw = 0 as *u8
+    return rc
+}
+
+pub fn bind_text(s: *Stmt, idx: i32, str: ffi.Str) -> i32 {
+    return sqlite3_bind_text(s.raw, idx, str.ptr, (str.len as i32), 0 as *u8)
+}
+
+pub fn bind_i64(s: *Stmt, idx: i32, v: i64) -> i32 {
+    return sqlite3_bind_int64(s.raw, idx, v)
+}
+
+pub fn step(s: *Stmt) -> i32 { return sqlite3_step(s.raw) }
+
+pub fn col_i64(s: *Stmt, i: i32) -> i64 { return sqlite3_column_int64(s.raw, i) }
+
+pub fn col_text(s: *Stmt, i: i32) -> *u8 { return sqlite3_column_text(s.raw, i) }
