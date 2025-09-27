@@ -1,0 +1,63 @@
+// examples/crud_todos/main.tng
+// Documentation: CRUD demo using std.sqlite and std.net.http GET for a ping.
+
+package examples.crud
+
+import std.ffi
+import std.mem
+import std.sqlite
+import std.net
+
+extern "C" fn puts(*u8) -> i32
+
+fn cstr(s: []u8) -> *u8 { return s.ptr } // assumes null-terminated literals in this file
+
+pub fn main() -> i32 {
+    // Arena for small buffers.
+    var arena = mem.arena_new(1_000_000)
+
+    // Open DB.
+    var db: sqlite.DB
+    let rc = sqlite.open(ffi.str_from(cstr("todos.db\0"), 8), &db)
+    if rc != 0 { puts(cstr("open db failed\n\0")); return 1 }
+
+    // Ensure schema.
+    let _ = sqlite.exec(&db, ffi.str_from(cstr(
+        "CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0);\0"
+    ), 167))
+
+    // Insert.
+    var ins: sqlite.Stmt
+    let _p1 = sqlite.prepare(&db, ffi.str_from(cstr("INSERT INTO todos(title,done) VALUES(?,?);\0"), 39), &ins)
+    let _b1 = sqlite.bind_text(&ins, 1, ffi.str_from(cstr("write docs\0"), 10))
+    let _b2 = sqlite.bind_i64(&ins, 2, 0)
+    let _s1 = sqlite.step(&ins)
+    let _f1 = sqlite.finalize(&ins)
+
+    // Query.
+    var sel: sqlite.Stmt
+    let _p2 = sqlite.prepare(&db, ffi.str_from(cstr("SELECT id,title,done FROM todos ORDER BY id;\0"), 45), &sel)
+    loop {
+        let r = sqlite.step(&sel)
+        if r == 101 { break }
+        if r != 100 { break }
+        // For brevity we print only the title.
+        let t = sqlite.col_text(&sel, 1)
+        puts(t)
+        puts(cstr("\n\0"))
+    }
+    let _f2 = sqlite.finalize(&sel)
+
+    // HTTP GET example.
+    var resp: net.Response
+    let code = net.http_get_into(ffi.str_from(cstr("https://example.org/\0"), 20), &resp, &arena, 256*1024, 3000)
+    if code == 0 {
+        puts(cstr("http ok\n\0"))
+    } else {
+        puts(cstr("http fail\n\0"))
+    }
+
+    let _ = sqlite.close(&db)
+    mem.arena_free(&arena)
+    return 0
+}
