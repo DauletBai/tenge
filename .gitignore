@@ -1,12 +1,25 @@
-# build outputs
+# build roots
+.bin/
 /.bin/
 /bin/
+benchmarks/.bin/
+
+# cargo targets
+**/target/
+
+# generated C from AOT (we emit to .bin anyway)
+*.o
+*.a
+*.so
+*.dll
+*.exe
 
 # OS junk
 .DS_Store
 Thumbs.db
 
-# Go: бинарники в исходных дерикториях бенчей
+# compiled Go bins in source trees
+benchmarks/src/go/*/*
 /benchmarks/src/go/**/fft
 /benchmarks/src/go/**/fib_iter
 /benchmarks/src/go/**/fib_rec
