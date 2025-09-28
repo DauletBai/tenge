@@ -1,4 +1,6 @@
 # Build roots
+.Appeal/
+Appeal/
 .bin/
 /bin/
 benchmarks/.bin/

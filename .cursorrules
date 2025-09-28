@@ -1,57 +1,29 @@
-SYSTEM_CONTEXT:
-- ALWAYS respond to the user in the chat panel in Russian, unless the user asks for a response in another language.
-- ALL new code comments MUST be written in English.
-- ALL new functions, classes, and methods MUST have JSDoc-style comments. For example:
+# Global guardrails for Cursor in this repository
 
-# @param {string} param1 - Description of the first parameter.
-# @param {number} param2 - Description of the second parameter.
-# @returns {boolean} Description of the return value.
+- All code comments must be in English and must serve as technical documentation only.
+- Do not include conversational explanations for the maintainer in code comments.
 
-project_mission: >
-  This repo implements the "Tenge" language and benchmarking suite (C/Rust/Go/Tenge AOT).
-  Goals: performance, correctness, reproducible benchmarks. No silent skips.
+- Do not break existing builds or benchmarks.
+- Prefer additive changes; avoid refactors that alter current behavior unless covered by tests/benches and explicitly approved.
+- Preserve existing Kazakh Latin letters, identifiers, and terms used in code.
 
-general_principles:
-  - Be explicit: when a build step fails, stop and show the exact command + full error.
-  - Never invent results. Never write placeholder outputs into CSV.
-  - Maintain order in outputs: Tenge → C → Rust → Go.
-  - Use single timing source: now_ns() in C/AOT; std::time::Instant (Rust); time.Now().UnixNano() (Go).
-  - Always build with release/opt flags (-O3/-march=native for C; --release for Rust; -ldflags "-s -w" for Go).
-  - GOMAXPROCS=1 for fair single-thread comparisons.
+- When adding features, guard them behind flags or separate targets; keep defaults preserving current behavior and results.
+- Keep performance sensitivity in mind; do not add hidden allocations or global locks on hot paths.
 
-tasks:
-  - name: Build all
-    steps:
-      - run: make clean && make build
-      - check: |
-          Ensure all .bin/* exist for: sort_c, fib_iter_c, fib_rec_c, var_mc_c,
-          sort_rs, fib_iter_rs, fib_rec_rs, var_mc_rs,
-          sort_go, fib_iter_go?, fib_rec_go?, var_mc_go?,
-          tenge AOT: fib_cli, fib_rec_cli, var_mc_tng_{sort,zig,qsel}, nbody_tng, nbody_tng_sym.
-      - ifMissing: |
-          STOP with error. Do not continue to bench. Ask to open and fix failing target.
+- For new modules:
+  - Provide minimal docs in English at the top of the file (what, inputs/outputs, complexity).
+  - Add unit/smoke tests or a micro-benchmark where applicable.
+  - Wire into CI only if it does not increase total runtime by more than +20% unless approved.
 
-  - name: Run suite
-    steps:
-      - run: REPS=5 NBODY_N=4096 NBODY_STEPS=10 NBODY_DT=0.001 ./benchmarks/run.sh
-      - verify: |
-          CSVs must contain all rows for Tenge/C/Rust/Go, no "0 ns" unless truly zero.
-          If some binary is missing → FAIL and fix Makefile or paths.
+- Follow repository conventions:
+  - Branch names: feature/*, perf/*, docs/*, chore/*, ci/*.
+  - Conventional commits: feat:, perf:, fix:, docs:, chore:, ci:, refactor:, test:, build:.
 
-bench_rules:
-  - No "Skipping (not found)" in final runs. Treat as error and fix.
-  - For ultra-fast tasks (e.g., fib_iter Tenge): measure in microseconds with batched loops and divide by reps; record nanoseconds.
-  - VaR: run sort / ziggurat / quickselect; record both latency and accuracy deltas vs analytic quantile.
-  - N-body: keep two variants (classic all-pairs + symmetric SoA); do not merge their numbers.
+- Pull requests must include:
+  - A clear summary of intent.
+  - A note on performance implications (if any).
+  - Evidence that `make build` and `benchmarks/run.sh` still pass locally.
 
-files_to_open_first:
-  - Makefile
-  - benchmarks/run.sh
-  - benchmarks/src/tenge/*.tng
-  - benchmarks/src/c/*.{c,h}
-  - benchmarks/src/rust/**/Cargo.toml
-  - benchmarks/src/go/**.go
+- If a change might be risky, create it behind a build tag or a Makefile target that is off by default.
 
-style_and_quality:
-  - Prefer small, composable scripts over giant conditionals.
-  - Document any change in RESULTS.md.
+- When asked to output code, prefer full files rather than patches/diffs.
