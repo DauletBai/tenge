@@ -18,14 +18,14 @@
   <style>
     .stroke {
       fill: none;
-      stroke: rgba(255,0,0,0.25);
+      stroke: rgba(13,110,253,0.25);
       stroke-width: 50;
       stroke-linecap: round;
     }
       
     .flow {
       fill: none;
-      stroke: #ff0000;
+      stroke: #0d6efd;
       stroke-width: 30;
       stroke-linecap: round;
       stroke-dasharray: 60;
